@@ -669,30 +669,98 @@ async function sendScreenshot() {
   try {
     emailjs.init({publicKey: EMAILJS_KEY});
 
-    // Capture the review list as a screenshot
-    title.textContent = 'Capturing review page…';
-    var reviewEl = document.getElementById('review-screen');
-    var canvas = await html2canvas(reviewEl, {
-      scale: 1.5,
-      useCORS: true,
-      backgroundColor: '#f4f6f9',
-      logging: false,
-      windowWidth: 390,
-      scrollY: -window.scrollY
+    // Build a simple contact sheet image on canvas directly - no html2canvas size issues
+    title.textContent = 'Building contact sheet…';
+
+    var s2 = sessions[currentSession];
+    var naFlags2 = s2.naFlags || {};
+    var allPhotos = [];
+    PHOTO_ITEMS.forEach(function(item) {
+      var photos = sessionPhotos[item.id] || [];
+      if (photos.length > 0) allPhotos.push({label: item.label, src: photos[0]});
+      else if (naFlags2[item.id]) allPhotos.push({label: item.label, src: null, na: true});
+      else allPhotos.push({label: item.label, src: null, missing: true});
     });
 
-    title.textContent = 'Compressing…';
-    // Compress to reasonable size
-    var imgData = canvas.toDataURL('image/jpeg', 0.7);
-    var sizeKB = Math.round(imgData.length / 1024);
-    status.textContent = 'Screenshot: ' + sizeKB + 'KB';
+    // Build contact sheet: 3 columns, thumbnails with labels
+    var COLS = 3;
+    var THUMB = 100;
+    var LABEL_H = 24;
+    var PAD = 6;
+    var ROWS = Math.ceil(allPhotos.length / COLS);
+    var W = (THUMB + PAD) * COLS + PAD;
+    var H = 60 + (THUMB + LABEL_H + PAD) * ROWS + PAD;
 
-    // If too large, compress more
-    if (sizeKB > 150) {
-      imgData = canvas.toDataURL('image/jpeg', 0.4);
+    var canvas = document.createElement('canvas');
+    canvas.width = W;
+    canvas.height = H;
+    var ctx = canvas.getContext('2d');
+
+    // Background
+    ctx.fillStyle = '#f4f6f9';
+    ctx.fillRect(0, 0, W, H);
+
+    // Header
+    ctx.fillStyle = '#1a2e4a';
+    ctx.fillRect(0, 0, W, 50);
+    ctx.fillStyle = 'white';
+    ctx.font = 'bold 14px Arial';
+    ctx.fillText('EcoPro: ' + s2.vessel + ' — ' + s2.installer, 8, 20);
+    ctx.font = '11px Arial';
+    ctx.fillText(date, 8, 38);
+
+    // Draw each photo
+    var loadPromises = allPhotos.map(function(ph, idx) {
+      return new Promise(function(resolve) {
+        var col = idx % COLS;
+        var row = Math.floor(idx / COLS);
+        var x = PAD + col * (THUMB + PAD);
+        var y = 60 + row * (THUMB + LABEL_H + PAD);
+
+        // Label background
+        ctx.fillStyle = ph.missing ? '#fdecea' : ph.na ? '#e6f5ee' : '#e8f2fb';
+        ctx.fillRect(x, y + THUMB, THUMB, LABEL_H);
+        ctx.fillStyle = ph.missing ? '#c0392b' : ph.na ? '#2a7a4b' : '#1a2e4a';
+        ctx.font = '9px Arial';
+        var label = ph.label.length > 18 ? ph.label.substring(0, 17) + '…' : ph.label;
+        ctx.fillText(label, x + 2, y + THUMB + 15);
+
+        if (ph.src) {
+          var img = new Image();
+          img.onload = function() {
+            ctx.drawImage(img, x, y, THUMB, THUMB);
+            resolve();
+          };
+          img.onerror = function() {
+            ctx.fillStyle = '#d1dce8';
+            ctx.fillRect(x, y, THUMB, THUMB);
+            resolve();
+          };
+          img.src = ph.src;
+        } else {
+          ctx.fillStyle = ph.na ? '#e6f5ee' : '#fdecea';
+          ctx.fillRect(x, y, THUMB, THUMB);
+          ctx.fillStyle = ph.na ? '#2a7a4b' : '#c0392b';
+          ctx.font = 'bold 11px Arial';
+          ctx.fillText(ph.na ? 'N/A' : 'Missing', x + 30, y + 54);
+          resolve();
+        }
+      });
+    });
+
+    await Promise.all(loadPromises);
+
+    title.textContent = 'Compressing…';
+    var imgData = canvas.toDataURL('image/jpeg', 0.6);
+    var sizeKB = Math.round(imgData.length / 1024);
+    // Keep compressing until under 45KB
+    var q = 0.5;
+    while (sizeKB > 45 && q > 0.1) {
+      q -= 0.1;
+      imgData = canvas.toDataURL('image/jpeg', q);
       sizeKB = Math.round(imgData.length / 1024);
-      status.textContent = 'Compressed to: ' + sizeKB + 'KB';
     }
+    status.textContent = 'Contact sheet: ' + sizeKB + 'KB';
 
     title.textContent = 'Sending email…';
     status.textContent = 'Sending to ' + NOTIFY_EMAIL;
