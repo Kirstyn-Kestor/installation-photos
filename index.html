@@ -599,13 +599,14 @@ async function submitToGoogleDrive(){
   try{
     emailjs.init({ publicKey: EMAILJS_KEY });
 
-    // Collect and compress all photos small enough for email
+    // Collect and compress all photos - very small for email
     setStatus('Compressing photos…', 5, 'Please keep this screen open');
     const allPhotos=[];
     for(const item of PHOTO_ITEMS){
       const photos = sessionPhotos[item.id]||[];
       for(let idx=0; idx<photos.length; idx++){
-        const compressed = await compressImage(photos[idx], 400, 0.3);
+        // Compress to 300px / 0.25 quality = ~10-20KB each
+        const compressed = await compressImage(photos[idx], 300, 0.25);
         allPhotos.push({ label:item.label, data:compressed, num:idx+1, total:photos.length });
       }
     }
