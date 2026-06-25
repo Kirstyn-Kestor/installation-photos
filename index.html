@@ -143,6 +143,7 @@
   .btn-modal-cancel { background: var(--grey-light); color: var(--text-soft); }
   .btn-modal-confirm { background: var(--red); color: var(--white); }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 </head>
 <body>
 
@@ -255,8 +256,10 @@
 <div class="toast" id="toast"></div>
 
 <script>
-// ── GOOGLE APPS SCRIPT URL ───────────────────────────────────────────────────
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby_0K14MVeXWcC9uNpukNZTpUhR7DWtjHIhv8Svwt9WRMZ2oL-ch6NWrKggdLXzBVc/exec';
+// ── EMAILJS CONFIG ───────────────────────────────────────────────────────────
+const EMAILJS_SERVICE  = 'service_xuaj2ik';
+const EMAILJS_TEMPLATE = 'template_hv1cr7h';
+const EMAILJS_KEY      = '2_uY_bTfLmNNdRRXM';
 // ─────────────────────────────────────────────────────────────────────────────
 
 const PHOTO_ITEMS = [
@@ -561,23 +564,12 @@ function goBackToChecklist(){
 }
 
 // ── GOOGLE DRIVE UPLOAD ───────────────────────────────────────────────────────
-async function callScript(payload) {
-  const res = await fetch(SCRIPT_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain' },
-    body: JSON.stringify(payload)
-  });
-  const text = await res.text();
-  try { return JSON.parse(text); }
-  catch(e) { return { success: true }; }
-}
-
 async function submitToGoogleDrive(){
   const s=sessions[currentSession]; const naFlags=s.naFlags||{};
   const uploadBtn=document.getElementById('btn-upload');
   uploadBtn.disabled=true;
   document.getElementById('upload-progress').style.display='block';
-  document.getElementById('upload-title').textContent='Uploading to Google Drive…';
+  document.getElementById('upload-title').textContent='Sending photos by email…';
   document.getElementById('upload-spinner').style.display='block';
   document.getElementById('review-actions-main').style.display='none';
 
@@ -589,67 +581,95 @@ async function submitToGoogleDrive(){
   }
 
   try{
-    // Step 1: Create folder — get folderId back
-    setStatus('Creating Google Drive folder…', 5);
-    const createData = await callScript({
-      action:'createJob', vessel:s.vessel, installer:s.installer, date:date
-    });
-    if(!createData.success) throw new Error(createData.error||'Could not create folder');
-    const folderId  = createData.folderId;
-    const folderUrl = createData.folderUrl;
+    emailjs.init({ publicKey: EMAILJS_KEY });
 
-    // Step 2: Upload photos one by one, passing folderId each time
+    // Collect and compress all photos small enough for email
+    setStatus('Compressing photos…', 5);
     const allPhotos=[];
-    PHOTO_ITEMS.forEach(item=>{
-      (sessionPhotos[item.id]||[]).forEach((p,idx)=>{
-        allPhotos.push({label:item.label, photoData:p, index:allPhotos.length});
-      });
-    });
-
-    const CHUNK = 500000; // 500KB chunks
-    for(let i=0;i<allPhotos.length;i++){
-      const ph=allPhotos[i];
-      const pct=5+Math.round((i/Math.max(allPhotos.length,1))*80);
-      setStatus('Uploading photo '+(i+1)+' of '+allPhotos.length+' — '+ph.label+'…', pct);
-      
-      const data = ph.photoData;
-      if(data.length <= CHUNK){
-        // Small enough to send in one go
-        const upData = await callScript({
-          action:'uploadPhoto', folderId:folderId,
-          photoData:data, label:ph.label, index:ph.index
-        });
-        if(!upData.success) throw new Error(upData.error||'Failed on: '+ph.label);
-      } else {
-        // Send in chunks
-        const totalChunks = Math.ceil(data.length / CHUNK);
-        for(let c=0; c<totalChunks; c++){
-          const chunk = data.substring(c*CHUNK, (c+1)*CHUNK);
-          const upData = await callScript({
-            action:'uploadPhotoChunk', folderId:folderId,
-            chunk:chunk, chunkIndex:c, totalChunks:totalChunks,
-            label:ph.label, index:ph.index
-          });
-          if(!upData.success) throw new Error(upData.error||'Failed chunk '+c+' on: '+ph.label);
-        }
+    for(const item of PHOTO_ITEMS){
+      const photos = sessionPhotos[item.id]||[];
+      for(let idx=0; idx<photos.length; idx++){
+        const compressed = await compressImage(photos[idx], 600, 0.4);
+        allPhotos.push({ label:item.label, data:compressed, num:idx+1, total:photos.length });
       }
     }
 
-    // Step 3: Send summary email
-    setStatus('Sending notification email…', 90);
-    const summary=PHOTO_ITEMS.map(item=>({
-      label:item.label,
-      status:(sessionPhotos[item.id]||[]).length>0?'done':naFlags[item.id]?'na':'missing'
-    }));
-    await callScript({
-      action:'completeJob', vessel:s.vessel, installer:s.installer,
-      date:date, folderId:folderId, folderUrl:folderUrl,
-      photoCount:allPhotos.length, summary:summary
+    if(allPhotos.length === 0){
+      throw new Error('No photos to send — please take some photos first');
+    }
+
+    // Batch into groups of 3 photos per email
+    const BATCH = 3;
+    const batches = [];
+    for(let i=0; i<allPhotos.length; i+=BATCH){
+      batches.push(allPhotos.slice(i, i+BATCH));
+    }
+
+    for(let b=0; b<batches.length; b++){
+      const batch = batches[b];
+      const firstNum = b*BATCH+1;
+      const lastNum  = Math.min(firstNum+batch.length-1, allPhotos.length);
+      const pct = 10 + Math.round((b/batches.length)*75);
+      setStatus('Sending email '+(b+1)+' of '+(batches.length+1)+' (photos '+firstNum+'-'+lastNum+')…', pct);
+
+      let photoHtml = '';
+      batch.forEach((ph,i)=>{
+        const caption = ph.total>1 ? ph.label+' ('+ph.num+' of '+ph.total+')' : ph.label;
+        photoHtml +=
+          '<div style="margin-bottom:24px;font-family:Arial">'+
+          '<p style="font-weight:bold;margin:0 0 6px;color:#1a2e4a;font-size:13px">'+(firstNum+i)+'. '+caption+'</p>'+
+          '<img src="'+ph.data+'" style="max-width:100%;border:1px solid #d1dce8;border-radius:4px">'+
+          '</div>';
+      });
+
+      const subject = 'EcoPro Photos — '+s.vessel+' — '+s.installer+' — '+firstNum+' to '+lastNum+' of '+allPhotos.length;
+      const message =
+        '<p style="font-family:Arial;color:#1a2e4a"><strong>Vessel:</strong> '+s.vessel+' &nbsp;|&nbsp; '+
+        '<strong>Installer:</strong> '+s.installer+' &nbsp;|&nbsp; '+
+        '<strong>Date:</strong> '+date+'<br>'+
+        '<strong>Batch:</strong> Email '+(b+1)+' of '+(batches.length+1)+' — Photos '+firstNum+' to '+lastNum+' of '+allPhotos.length+'</p>'+
+        '<hr style="border:1px solid #d1dce8;margin:12px 0">'+
+        photoHtml;
+
+      await emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, {
+        subject, message,
+        name:'EcoPro Installer App',
+        email:'hydrogenecopro@gmail.com'
+      });
+
+      if(b < batches.length-1) await new Promise(r=>setTimeout(r, 800));
+    }
+
+    // Final summary email
+    setStatus('Sending summary email…', 90);
+    const complete = PHOTO_ITEMS.filter(i=>(sessionPhotos[i.id]||[]).length>0);
+    const missing  = PHOTO_ITEMS.filter(i=>!(sessionPhotos[i.id]||[]).length&&!naFlags[i.id]);
+    const na       = PHOTO_ITEMS.filter(i=>naFlags[i.id]);
+
+    const summaryMsg =
+      '<h3 style="font-family:Arial;color:#1a2e4a;margin:0 0 12px">EcoPro Installation Summary</h3>'+
+      '<p style="font-family:Arial"><strong>Vessel:</strong> '+s.vessel+'<br>'+
+      '<strong>Installer:</strong> '+s.installer+'<br>'+
+      '<strong>Date:</strong> '+date+'</p>'+
+      '<hr style="border:1px solid #d1dce8">'+
+      '<p style="font-family:Arial"><strong style="color:#2a7a4b">✅ Complete ('+complete.length+'/'+PHOTO_ITEMS.length+'):</strong><br>'+
+      complete.map(i=>'• '+i.label+' ('+(sessionPhotos[i.id]||[]).length+' photo'+((sessionPhotos[i.id]||[]).length>1?'s':'')+')').join('<br>')+
+      '</p>'+
+      (missing.length>0
+        ? '<p style="font-family:Arial;color:#c0392b"><strong>⚠️ Missing ('+missing.length+'):</strong><br>'+missing.map(i=>'• '+i.label).join('<br>')+'</p>'
+        : '<p style="font-family:Arial;color:#2a7a4b"><strong>🎉 All required items photographed!</strong></p>')+
+      (na.length>0 ? '<p style="font-family:Arial"><strong>➖ Not applicable ('+na.length+'):</strong><br>'+na.map(i=>'• '+i.label).join('<br>')+'</p>' : '')+
+      '<p style="font-family:Arial"><strong>Total photos sent: '+allPhotos.length+'</strong><br>Sent in '+batches.length+' photo email'+(batches.length>1?'s':'')+' plus this summary.</p>';
+
+    await emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, {
+      subject: 'EcoPro Summary — '+s.vessel+' — '+s.installer+' — '+date,
+      message: summaryMsg,
+      name:'EcoPro Installer App',
+      email:'hydrogenecopro@gmail.com'
     });
 
-    setStatus('✅ All done!', 100);
+    setStatus('✅ All done! '+allPhotos.length+' photos sent in '+(batches.length+1)+' emails.', 100);
     sessions[currentSession].submitted=true;
-    sessions[currentSession].driveUrl=folderUrl;
     saveMeta();
 
     document.getElementById('upload-spinner').style.display='none';
@@ -657,20 +677,19 @@ async function submitToGoogleDrive(){
       document.getElementById('upload-progress').style.display='none';
       document.getElementById('post-submit').style.display='block';
       const detail=document.getElementById('success-detail');
-      if(detail) detail.textContent=allPhotos.length+' photos uploaded to Google Drive. Email sent to info@ecomotus.com.';
-      const link=document.getElementById('drive-link');
-      if(link && folderUrl){link.href=folderUrl;link.style.display='block';}
-      showToast('✅ '+allPhotos.length+' photos uploaded!');
+      if(detail) detail.textContent=allPhotos.length+' photos emailed to info@ecomotus.com in '+(batches.length+1)+' emails.';
+      showToast('✅ '+allPhotos.length+' photos sent successfully!');
     }, 800);
 
   }catch(err){
-    console.error('Upload error:', err);
-    setStatus('⚠️ '+(err.message||'Upload failed'), 0);
-    document.getElementById('upload-title').textContent='Upload failed — please try again';
+    console.error('EmailJS error:', err);
+    const errMsg = err.text||err.message||(typeof err==='object'?JSON.stringify(err):String(err));
+    setStatus('⚠️ '+errMsg, 0);
+    document.getElementById('upload-title').textContent='Send failed — please try again';
     document.getElementById('upload-spinner').style.display='none';
     uploadBtn.disabled=false;
     document.getElementById('review-actions-main').style.display='flex';
-    showToast('Upload failed — try again');
+    showToast('Failed: '+errMsg.substring(0,50));
   }
 }
 
