@@ -248,7 +248,7 @@
 
 <script>
 // ── REPLACE THIS WITH YOUR GOOGLE APPS SCRIPT URL AFTER DEPLOYING ────────────
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzfoH_0ckLvCk-rFVoSTV7sQsJ0cHFmGgI0MBhkuEBVj8OWi-jokuONLCA9hYc8Tmo/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzbHGG3b_kPcmaGQSolLP7P7hYs9aczLLEMw-OieVER5tGwDRrtH1nXVps1kqnduBM/exec';
 // ─────────────────────────────────────────────────────────────────────────────
 
 const PHOTO_ITEMS = [
@@ -554,17 +554,12 @@ function goBackToChecklist(){
 
 // ── GOOGLE DRIVE UPLOAD ───────────────────────────────────────────────────────
 async function callScript(payload) {
-  // Use no-cors mode with URLSearchParams to avoid CORS preflight issues with Google Apps Script
-  const params = new URLSearchParams();
-  params.append('payload', JSON.stringify(payload));
-  const res = await fetch(SCRIPT_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: params.toString()
-  });
+  // Google Apps Script requires requests via URL params to avoid CORS issues
+  const url = SCRIPT_URL + '?payload=' + encodeURIComponent(JSON.stringify(payload));
+  const res = await fetch(url, { method: 'GET' });
   const text = await res.text();
   try { return JSON.parse(text); }
-  catch(e) { throw new Error('Bad response from server: ' + text.substring(0, 100)); }
+  catch(e) { throw new Error('Bad response: ' + text.substring(0, 200)); }
 }
 
 async function submitToGoogleDrive(){
