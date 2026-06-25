@@ -248,7 +248,7 @@
 
 <script>
 // ── REPLACE THIS WITH YOUR GOOGLE APPS SCRIPT URL AFTER DEPLOYING ────────────
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby-yQN3d5m0bzsIBa1dlXiz8tF5PXdviGeibssuL_e0TtrRmyqlin1g-UkGQHA3hIM68Q/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzfoH_0ckLvCk-rFVoSTV7sQsJ0cHFmGgI0MBhkuEBVj8OWi-jokuONLCA9hYc8Tmo/exec';
 // ─────────────────────────────────────────────────────────────────────────────
 
 const PHOTO_ITEMS = [
@@ -553,6 +553,20 @@ function goBackToChecklist(){
 }
 
 // ── GOOGLE DRIVE UPLOAD ───────────────────────────────────────────────────────
+async function callScript(payload) {
+  // Use no-cors mode with URLSearchParams to avoid CORS preflight issues with Google Apps Script
+  const params = new URLSearchParams();
+  params.append('payload', JSON.stringify(payload));
+  const res = await fetch(SCRIPT_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: params.toString()
+  });
+  const text = await res.text();
+  try { return JSON.parse(text); }
+  catch(e) { throw new Error('Bad response from server: ' + text.substring(0, 100)); }
+}
+
 async function submitToGoogleDrive(){
   if(SCRIPT_URL==='YOUR_GOOGLE_APPS_SCRIPT_URL_HERE'){
     showToast('⚠️ Script URL not configured yet');
@@ -562,6 +576,7 @@ async function submitToGoogleDrive(){
   const uploadBtn=document.getElementById('btn-upload');
   uploadBtn.disabled=true;
   document.getElementById('upload-progress').style.display='block';
+  document.getElementById('upload-title').textContent='Uploading to Google Drive…';
   document.getElementById('review-actions-main').style.display='none';
 
   const date=new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
@@ -575,8 +590,7 @@ async function submitToGoogleDrive(){
   try{
     // Step 1: Create job folder
     setUploadStatus('Creating Google Drive folder…',5);
-    const createRes=await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'createJob',vessel:s.vessel,installer:s.installer,jobId,date})});
-    const createData=await createRes.json();
+    const createData = await callScript({action:'createJob',vessel:s.vessel,installer:s.installer,jobId,date});
     if(!createData.success) throw new Error(createData.error||'Failed to create folder');
 
     // Step 2: Upload photos one by one
@@ -590,9 +604,8 @@ async function submitToGoogleDrive(){
     for(let i=0;i<allPhotos.length;i++){
       const ph=allPhotos[i];
       const pct=5+Math.round((i/allPhotos.length)*85);
-      setUploadStatus(`Uploading photo ${i+1} of ${allPhotos.length} — ${ph.label}…`,pct);
-      const upRes=await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'uploadPhoto',jobId,photoData:ph.photoData,label:ph.label,index:ph.index})});
-      const upData=await upRes.json();
+      setUploadStatus('Uploading photo '+(i+1)+' of '+allPhotos.length+' — '+ph.label+'…',pct);
+      const upData = await callScript({action:'uploadPhoto',jobId,photoData:ph.photoData,label:ph.label,index:ph.index});
       if(!upData.success) throw new Error('Failed to upload: '+ph.label);
     }
 
@@ -602,18 +615,14 @@ async function submitToGoogleDrive(){
       label:item.label,
       status:(sessionPhotos[item.id]||[]).length>0?'done':naFlags[item.id]?'na':'missing'
     }));
-    const completeRes=await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'completeJob',jobId,summary})});
-    const completeData=await completeRes.json();
+    const completeData = await callScript({action:'completeJob',jobId,summary});
     if(!completeData.success) throw new Error(completeData.error||'Failed to complete');
 
     setUploadStatus('✅ All done!',100);
-
-    // Mark as submitted
     sessions[currentSession].submitted=true;
     sessions[currentSession].driveUrl=completeData.folderUrl;
     saveMeta();
 
-    // Show Drive link
     setTimeout(()=>{
       document.getElementById('upload-progress').style.display='none';
       document.getElementById('post-submit').style.display='block';
@@ -626,7 +635,7 @@ async function submitToGoogleDrive(){
     document.getElementById('upload-title').textContent='Upload failed';
     uploadBtn.disabled=false;
     document.getElementById('review-actions-main').style.display='flex';
-    showToast('Upload failed — check your connection');
+    showToast('Upload failed — check connection and try again');
   }
 }
 
