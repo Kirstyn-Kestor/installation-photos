@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>EcoPro Installation Photos</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --navy: #1a2e4a; --navy-mid: #2c4a6e; --blue: #3b6fa0; --blue-light: #5a8fc0;
+    --accent: #e8f2fb; --green: #2a7a4b; --green-light: #e6f5ee;
+    --amber: #b85c00; --amber-light: #fff4e6; --red: #c0392b; --red-light: #fdecea;
+    --grey: #6b7a8d; --grey-light: #f4f6f9; --white: #ffffff; --border: #d1dce8;
+    --text: #1a2e4a; --text-soft: #4a5a6e; --radius: 10px;
+    --shadow: 0 2px 8px rgba(26,46,74,0.10); --shadow-card: 0 3px 14px rgba(26,46,74,0.13);
+  }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; background: var(--grey-light); color: var(--text); min-height: 100vh; padding-bottom: 80px; }
+  header { background: var(--navy); padding: 16px 20px 14px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+  .header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .logo { font-size: 17px; font-weight: 700; color: var(--white); letter-spacing: 0.3px; }
+  .logo span { color: var(--blue-light); }
+  .job-badge { background: var(--navy-mid); color: var(--blue-light); font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 20px; cursor: pointer; border: 1px solid var(--blue); }
+  .progress-wrap { background: rgba(255,255,255,0.1); border-radius: 4px; height: 6px; overflow: hidden; }
+  .progress-bar { height: 100%; background: linear-gradient(90deg, var(--blue-light), #7ec8f0); border-radius: 4px; transition: width 0.4s ease; }
+  .progress-label { display: flex; justify-content: space-between; margin-top: 6px; font-size: 12px; color: rgba(255,255,255,0.7); }
+  .progress-label strong { color: var(--white); }
+  #setup-screen { padding: 24px 20px; }
+  .setup-card { background: var(--white); border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow-card); }
+  .setup-card h2 { font-size: 20px; font-weight: 700; color: var(--navy); margin-bottom: 6px; }
+  .setup-card p { color: var(--text-soft); font-size: 14px; margin-bottom: 20px; line-height: 1.5; }
+  .field-group { margin-bottom: 16px; }
+  .field-group label { display: block; font-size: 13px; font-weight: 600; color: var(--text-soft); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .field-group input { width: 100%; padding: 12px 14px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 16px; color: var(--text); background: var(--grey-light); -webkit-appearance: none; transition: border-color 0.2s; }
+  .field-group input:focus { outline: none; border-color: var(--blue); background: var(--white); }
+  .btn-primary { width: 100%; padding: 15px; background: var(--navy); color: var(--white); border: none; border-radius: var(--radius); font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 8px; letter-spacing: 0.3px; transition: background 0.2s; }
+  .btn-primary:active { background: var(--navy-mid); }
+  .saved-sessions { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border); }
+  .saved-sessions h3 { font-size: 13px; font-weight: 600; color: var(--text-soft); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
+  .session-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; background: var(--accent); border: 1px solid var(--blue-light); border-radius: 8px; margin-bottom: 8px; cursor: pointer; }
+  .session-item:active { opacity: 0.7; }
+  .session-info { flex: 1; }
+  .session-name { font-size: 15px; font-weight: 600; color: var(--navy); }
+  .session-meta { font-size: 12px; color: var(--text-soft); margin-top: 2px; }
+  .session-arrow { font-size: 18px; color: var(--blue); margin-left: 10px; }
+  .session-delete { background: none; border: none; color: var(--red); font-size: 18px; padding: 4px 8px; cursor: pointer; margin-left: 4px; }
+  #main-screen { display: none; }
+  .screen-padding { padding: 16px 16px 0; }
+  .filter-tabs { display: flex; gap: 8px; margin-bottom: 14px; overflow-x: auto; padding-bottom: 2px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .filter-tabs::-webkit-scrollbar { display: none; }
+  .filter-tab { flex-shrink: 0; padding: 7px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; border: 1.5px solid var(--border); background: var(--white); color: var(--text-soft); cursor: pointer; transition: all 0.15s; }
+  .filter-tab.active { background: var(--navy); color: var(--white); border-color: var(--navy); }
+  .checklist { padding: 0 16px; }
+  .photo-item { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 10px; overflow: hidden; border: 1.5px solid var(--border); transition: border-color 0.2s; }
+  .photo-item.done { border-color: var(--green); }
+  .photo-item.na { border-color: var(--border); opacity: 0.7; }
+  .item-header { display: flex; align-items: center; padding: 13px 14px; gap: 12px; cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; }
+  .item-number { width: 28px; height: 28px; border-radius: 50%; background: var(--grey-light); border: 1.5px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: var(--text-soft); flex-shrink: 0; transition: all 0.2s; }
+  .photo-item.done .item-number { background: var(--green); border-color: var(--green); color: var(--white); }
+  .item-label { flex: 1; font-size: 15px; font-weight: 600; color: var(--text); line-height: 1.3; }
+  .item-label .conditional { display: block; font-size: 11px; font-weight: 500; color: var(--amber); margin-top: 2px; font-style: italic; }
+  .item-count { font-size: 12px; font-weight: 600; color: var(--blue); background: var(--accent); padding: 3px 8px; border-radius: 12px; white-space: nowrap; }
+  .photo-item.done .item-count { color: var(--green); background: var(--green-light); }
+  .photo-item.na .item-count { color: var(--amber); background: var(--amber-light); }
+  .item-chevron { color: var(--grey); font-size: 16px; transition: transform 0.2s; flex-shrink: 0; }
+  .photo-item.expanded .item-chevron { transform: rotate(90deg); }
+  .item-body { display: none; padding: 0 14px 14px; border-top: 1px solid var(--border); }
+  .photo-item.expanded .item-body { display: block; }
+  .thumb-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 12px 0; }
+  .thumb { aspect-ratio: 1; border-radius: 6px; overflow: hidden; position: relative; background: var(--grey-light); border: 1px solid var(--border); }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .thumb-del { position: absolute; top: 3px; right: 3px; background: rgba(0,0,0,0.6); color: white; border: none; border-radius: 50%; width: 22px; height: 22px; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1; }
+  .thumb-num { position: absolute; bottom: 3px; left: 4px; background: rgba(0,0,0,0.55); color: white; font-size: 10px; font-weight: 700; padding: 1px 5px; border-radius: 4px; }
+  .item-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+  .btn-photo { flex: 1; min-width: 130px; padding: 12px 10px; background: var(--navy); color: var(--white); border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: background 0.15s; -webkit-tap-highlight-color: transparent; }
+  .btn-photo:active { background: var(--navy-mid); }
+  .btn-na { padding: 12px 12px; background: var(--grey-light); color: var(--text-soft); border: 1.5px solid var(--border); border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all 0.15s; -webkit-tap-highlight-color: transparent; }
+  .btn-na.active { background: var(--amber-light); border-color: var(--amber); color: var(--amber); }
+  .hidden-input { display: none; }
+  .na-note { font-size: 13px; color: var(--amber); background: var(--amber-light); border-radius: 6px; padding: 8px 10px; margin-top: 10px; font-style: italic; }
+  .submit-section { padding: 16px; margin-top: 8px; }
+  .submit-card { background: var(--white); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow-card); text-align: center; }
+  .submit-card h3 { font-size: 16px; font-weight: 700; color: var(--navy); margin-bottom: 6px; }
+  .submit-card p { font-size: 13px; color: var(--text-soft); margin-bottom: 14px; line-height: 1.5; }
+  .btn-submit { width: 100%; padding: 15px; background: var(--green); color: var(--white); border: none; border-radius: var(--radius); font-size: 16px; font-weight: 700; cursor: pointer; letter-spacing: 0.3px; transition: background 0.2s; }
+  .btn-submit:active { background: #1e5c38; }
+  .btn-back { width: 100%; padding: 12px; background: none; color: var(--text-soft); border: 1.5px solid var(--border); border-radius: var(--radius); font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 10px; }
+  #review-screen { display: none; padding: 20px 16px; }
+  .review-header { background: var(--white); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow-card); margin-bottom: 16px; }
+  .review-header h2 { font-size: 20px; font-weight: 700; color: var(--navy); margin-bottom: 4px; }
+  .review-header p { color: var(--text-soft); font-size: 14px; }
+  .review-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 14px; }
+  .stat-box { text-align: center; background: var(--grey-light); border-radius: 8px; padding: 10px 6px; }
+  .stat-box .num { font-size: 22px; font-weight: 800; color: var(--navy); }
+  .stat-box.green .num { color: var(--green); }
+  .stat-box.amber .num { color: var(--amber); }
+  .stat-box .lbl { font-size: 11px; color: var(--text-soft); font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
+  .review-section { background: var(--white); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); margin-bottom: 10px; border: 1.5px solid var(--border); }
+  .review-section.done-section { border-color: var(--green); }
+  .review-section.missing-section { border-color: var(--red); }
+  .review-section.na-section { border-color: var(--border); opacity: 0.7; }
+  .review-section-head { padding: 12px 14px; display: flex; align-items: center; gap: 10px; }
+  .review-section.done-section .review-section-head { background: var(--green-light); border-bottom: 1px solid var(--border); }
+  .review-section.missing-section .review-section-head { background: var(--red-light); }
+  .review-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--grey); flex-shrink: 0; }
+  .done-section .review-dot { background: var(--green); }
+  .missing-section .review-dot { background: var(--red); }
+  .review-label { flex: 1; font-size: 14px; font-weight: 700; color: var(--text); }
+  .review-count { font-size: 12px; font-weight: 600; color: var(--text-soft); }
+  .review-thumbs { display: flex; gap: 8px; padding: 10px 14px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .review-thumb { flex-shrink: 0; width: 80px; height: 80px; border-radius: 6px; overflow: hidden; border: 1px solid var(--border); }
+  .review-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .review-msg { padding: 10px 14px; font-size: 13px; font-style: italic; }
+  .review-msg.missing { color: var(--red); }
+  .review-msg.na { color: var(--amber); }
+  .review-actions { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+  .btn-review-action { flex: 1; min-width: 130px; padding: 13px 10px; border-radius: var(--radius); font-size: 14px; font-weight: 700; cursor: pointer; text-align: center; border: none; transition: opacity 0.15s; }
+  .btn-review-action:active { opacity: 0.7; }
+  .btn-go-back { background: var(--navy); color: var(--white); }
+  .btn-share { background: #25D366; color: var(--white); }
+  .btn-clear { background: var(--red-light); color: var(--red); border: 1.5px solid var(--red) !important; }
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--navy); color: var(--white); padding: 12px 22px; border-radius: 24px; font-size: 14px; font-weight: 600; z-index: 999; transition: transform 0.3s ease; white-space: nowrap; box-shadow: 0 4px 16px rgba(0,0,0,0.25); }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; display: none; align-items: center; justify-content: center; padding: 20px; }
+  .modal-overlay.show { display: flex; }
+  .modal { background: var(--white); border-radius: 14px; padding: 24px; width: 100%; max-width: 360px; box-shadow: 0 8px 32px rgba(0,0,0,0.2); }
+  .modal h3 { font-size: 18px; font-weight: 700; color: var(--navy); margin-bottom: 8px; }
+  .modal p { font-size: 14px; color: var(--text-soft); margin-bottom: 18px; line-height: 1.5; }
+  .modal-actions { display: flex; gap: 10px; }
+  .modal-actions button { flex: 1; padding: 12px; border-radius: 8px; font-size: 15px; font-weight: 700; cursor: pointer; border: none; }
+  .btn-modal-cancel { background: var(--grey-light); color: var(--text-soft); }
+  .btn-modal-confirm { background: var(--red); color: var(--white); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-top">
+    <div class="logo">Eco<span>Pro</span> Installation</div>
+    <div class="job-badge" id="job-badge" onclick="showToast('Tap Save & go back to switch jobs')" style="display:none">✏️ <span id="job-badge-text"></span></div>
+  </div>
+  <div class="progress-wrap" id="progress-wrap" style="display:none">
+    <div class="progress-bar" id="progress-bar" style="width:0%"></div>
+  </div>
+  <div class="progress-label" id="progress-label" style="display:none">
+    <span id="progress-text">0 of 18 complete</span>
+    <strong id="progress-pct">0%</strong>
+  </div>
+</header>
+
+<div id="setup-screen">
+  <div style="padding:24px 20px;">
+    <div class="setup-card">
+      <h2>New Installation</h2>
+      <p>Enter the vessel name and your name to start. Photos are saved to your phone as you go — close and return any time without losing progress.</p>
+      <div class="field-group">
+        <label>Vessel Name</label>
+        <input type="text" id="vessel-input" placeholder="e.g. MV Sea Hawk" autocomplete="off">
+      </div>
+      <div class="field-group">
+        <label>Installer Name</label>
+        <input type="text" id="installer-input" placeholder="e.g. John Smith" autocomplete="off">
+      </div>
+      <button class="btn-primary" onclick="startSession()">Start Photo Checklist →</button>
+    </div>
+    <div class="saved-sessions" id="saved-sessions-wrap" style="display:none">
+      <h3>Continue a previous job</h3>
+      <div id="saved-sessions-list"></div>
+    </div>
+  </div>
+</div>
+
+<div id="main-screen">
+  <div class="screen-padding">
+    <div class="filter-tabs">
+      <div class="filter-tab active" onclick="setFilter('all',this)">All <span id="tab-all-count"></span></div>
+      <div class="filter-tab" onclick="setFilter('outstanding',this)">Outstanding <span id="tab-out-count"></span></div>
+      <div class="filter-tab" onclick="setFilter('done',this)">Done <span id="tab-done-count"></span></div>
+    </div>
+  </div>
+  <div class="checklist" id="checklist"></div>
+  <div class="submit-section">
+    <div class="submit-card">
+      <h3>Ready to review?</h3>
+      <p id="submit-info">Take photos then review and submit.</p>
+      <button class="btn-submit" onclick="goToReview()">Review &amp; Submit</button>
+      <button class="btn-back" onclick="goToSetup()">← Save &amp; go back to jobs</button>
+    </div>
+  </div>
+</div>
+
+<div id="review-screen">
+  <div class="review-header">
+    <h2 id="review-title"></h2>
+    <p id="review-subtitle"></p>
+    <div class="review-stats">
+      <div class="stat-box green"><div class="num" id="stat-done">0</div><div class="lbl">Complete</div></div>
+      <div class="stat-box amber"><div class="num" id="stat-missing">0</div><div class="lbl">Missing</div></div>
+      <div class="stat-box"><div class="num" id="stat-na">0</div><div class="lbl">N/A</div></div>
+    </div>
+  </div>
+  <div id="review-list"></div>
+  <div class="review-actions">
+    <button class="btn-review-action btn-go-back" onclick="goBackToChecklist()">← Fill gaps</button>
+    <button class="btn-review-action btn-share" onclick="shareStatus()">Share via WhatsApp</button>
+  </div>
+  <div class="review-actions" style="margin-top:0">
+    <button class="btn-review-action btn-clear" onclick="confirmClear()">🗑 Clear this job</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <h3 id="modal-title"></h3>
+    <p id="modal-body"></p>
+    <div class="modal-actions">
+      <button class="btn-modal-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-modal-confirm" id="modal-confirm-btn">Delete</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const PHOTO_ITEMS = [
+  {id:1, label:"Engine location in Engine Room", note:"May require multiple photos", multi:true},
+  {id:2, label:"Engine", note:null},
+  {id:3, label:"Engine Plate", note:"If visible", conditional:true},
+  {id:4, label:"EcoPro in relation to Engine and walkways", note:null},
+  {id:5, label:"EcoPro mounting points", note:null},
+  {id:6, label:"EcoPro Power Supply", note:null},
+  {id:7, label:"Power supply cable run", note:null},
+  {id:8, label:"EcoPro Serial Number", note:null},
+  {id:9, label:"Knock Sensor", note:null},
+  {id:10, label:"Knock Sensor cable run", note:null},
+  {id:11, label:"Hydrogen Connection to Air Filter", note:"Two photos if a 'V' Engine", multi:true},
+  {id:12, label:"Hydrogen Hose run", note:"May require multiple photos", multi:true},
+  {id:13, label:"NOx Sensor in Exhaust (close up)", note:"If fitted", conditional:true},
+  {id:14, label:"NOx Sensor location in relation to exhaust and engine", note:"If fitted", conditional:true},
+  {id:15, label:"CANbus connection", note:"If fitted", conditional:true},
+  {id:16, label:"Fuel Flow Meter connection", note:"If fitted", conditional:true},
+  {id:17, label:"Fuel Flow Meter Make and Model", note:"If fitted and visible", conditional:true},
+  {id:18, label:"External Vessel Photo", note:null}
+];
+
+let currentSession = null;
+let sessions = {};
+let currentFilter = 'all';
+
+function loadSessions() {
+  try { const r = localStorage.getItem('ecoproSessions'); if(r) sessions = JSON.parse(r); } catch(e) { sessions = {}; }
+}
+function saveSessions() {
+  try { localStorage.setItem('ecoproSessions', JSON.stringify(sessions)); }
+  catch(e) { showToast('⚠️ Storage nearly full — review old jobs'); }
+}
+function getKey(v,i) { return (v+'_'+i).replace(/[^a-z0-9]/gi,'_').toLowerCase(); }
+
+function initSession(vessel, installer) {
+  const key = getKey(vessel, installer);
+  if (!sessions[key]) {
+    sessions[key] = { vessel, installer, created: new Date().toISOString(), updated: new Date().toISOString(), items: {} };
+    PHOTO_ITEMS.forEach(item => { sessions[key].items[item.id] = {photos:[], na:false}; });
+    saveSessions();
+  }
+  return key;
+}
+
+function renderSetup() {
+  loadSessions();
+  const keys = Object.keys(sessions);
+  const wrap = document.getElementById('saved-sessions-wrap');
+  if (keys.length === 0) { wrap.style.display='none'; return; }
+  wrap.style.display = 'block';
+  document.getElementById('saved-sessions-list').innerHTML = keys.map(key => {
+    const s = sessions[key];
+    const done = Object.values(s.items).filter(i => i.photos.length>0 || i.na).length;
+    const date = new Date(s.updated).toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+    return `<div class="session-item" onclick="resumeSession('${key}')">
+      <div class="session-info">
+        <div class="session-name">${s.vessel}</div>
+        <div class="session-meta">${s.installer} · ${done}/18 done · ${date}</div>
+      </div>
+      <div class="session-arrow">›</div>
+      <button class="session-delete" onclick="event.stopPropagation();confirmDeleteSession('${key}')">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function startSession() {
+  const vessel = document.getElementById('vessel-input').value.trim();
+  const installer = document.getElementById('installer-input').value.trim();
+  if (!vessel) { showToast('Please enter a vessel name'); return; }
+  if (!installer) { showToast('Please enter your name'); return; }
+  loadChecklist(initSession(vessel, installer));
+}
+function resumeSession(key) { loadChecklist(key); }
+
+function goToSetup() {
+  currentSession = null;
+  document.getElementById('main-screen').style.display = 'none';
+  document.getElementById('review-screen').style.display = 'none';
+  document.getElementById('setup-screen').style.display = 'block';
+  document.getElementById('progress-wrap').style.display = 'none';
+  document.getElementById('progress-label').style.display = 'none';
+  document.getElementById('job-badge').style.display = 'none';
+  document.getElementById('vessel-input').value = '';
+  document.getElementById('installer-input').value = '';
+  renderSetup();
+}
+
+function loadChecklist(key) {
+  currentSession = key;
+  const s = sessions[key];
+  document.getElementById('setup-screen').style.display = 'none';
+  document.getElementById('review-screen').style.display = 'none';
+  document.getElementById('main-screen').style.display = 'block';
+  document.getElementById('progress-wrap').style.display = 'block';
+  document.getElementById('progress-label').style.display = 'flex';
+  document.getElementById('job-badge').style.display = 'inline-flex';
+  document.getElementById('job-badge-text').textContent = s.vessel;
+  currentFilter = 'all';
+  document.querySelectorAll('.filter-tab').forEach((t,i) => t.classList.toggle('active', i===0));
+  renderChecklist();
+  window.scrollTo(0,0);
+}
+
+function renderChecklist() {
+  const s = sessions[currentSession];
+  document.getElementById('checklist').innerHTML = PHOTO_ITEMS.map(item => {
+    const state = s.items[item.id];
+    const isDone = state.photos.length > 0;
+    const isNA = state.na;
+    const countText = isDone ? `${state.photos.length} photo${state.photos.length>1?'s':''}` : isNA ? 'N/A' : 'Needed';
+    const thumbs = state.photos.map((p,idx) =>
+      `<div class="thumb"><img src="${p}" loading="lazy"><div class="thumb-num">${idx+1}</div>
+      <button class="thumb-del" onclick="deletePhoto(${item.id},${idx},event)">✕</button></div>`
+    ).join('');
+    return `<div class="photo-item${isDone?' done':''}${isNA?' na':''}" id="item-${item.id}">
+      <div class="item-header" onclick="toggleItem(${item.id})">
+        <div class="item-number">${isDone?'✓':item.id}</div>
+        <div class="item-label">${item.label}${item.note?`<span class="conditional">${item.note}</span>`:''}</div>
+        <div class="item-count">${countText}</div>
+        <div class="item-chevron">›</div>
+      </div>
+      <div class="item-body">
+        ${state.photos.length>0?`<div class="thumb-grid">${thumbs}</div>`:''}
+        <div class="item-actions">
+          <button class="btn-photo" onclick="triggerPhoto(${item.id})">📷 ${isDone?'Add another':'Take photo'}</button>
+          ${item.conditional?`<button class="btn-na${isNA?' active':''}" onclick="toggleNA(${item.id})">Not applicable</button>`:''}
+        </div>
+        ${isNA?'<div class="na-note" style="margin-top:10px">Marked as not applicable for this installation.</div>':''}
+        <input type="file" accept="image/*" capture="environment" class="hidden-input" id="input-${item.id}" onchange="handlePhoto(${item.id},this)">
+      </div>
+    </div>`;
+  }).join('');
+  updateProgress();
+  applyFilter(currentFilter);
+}
+
+function toggleItem(id) { document.getElementById('item-'+id).classList.toggle('expanded'); }
+function triggerPhoto(id) { document.getElementById('input-'+id).click(); }
+
+function handlePhoto(id, input) {
+  if (!input.files || !input.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const s = sessions[currentSession];
+    s.items[id].photos.push(e.target.result);
+    s.items[id].na = false;
+    s.updated = new Date().toISOString();
+    saveSessions();
+    renderChecklist();
+    setTimeout(() => {
+      const el = document.getElementById('item-'+id);
+      if(el) { el.classList.add('expanded'); el.scrollIntoView({behavior:'smooth',block:'nearest'}); }
+    }, 60);
+    showToast('✓ Photo saved');
+  };
+  reader.readAsDataURL(input.files[0]);
+  input.value = '';
+}
+
+function deletePhoto(id, idx, event) {
+  event.stopPropagation();
+  const s = sessions[currentSession];
+  s.items[id].photos.splice(idx,1);
+  s.updated = new Date().toISOString();
+  saveSessions();
+  renderChecklist();
+  setTimeout(() => { const el = document.getElementById('item-'+id); if(el) el.classList.add('expanded'); }, 60);
+  showToast('Photo removed');
+}
+
+function toggleNA(id) {
+  const s = sessions[currentSession];
+  s.items[id].na = !s.items[id].na;
+  if (s.items[id].na) s.items[id].photos = [];
+  s.updated = new Date().toISOString();
+  saveSessions();
+  renderChecklist();
+  setTimeout(() => { const el = document.getElementById('item-'+id); if(el) el.classList.add('expanded'); }, 60);
+}
+
+function updateProgress() {
+  const s = sessions[currentSession];
+  const total = PHOTO_ITEMS.length;
+  const done = PHOTO_ITEMS.filter(i => s.items[i.id].photos.length>0 || s.items[i.id].na).length;
+  const outstanding = total - done;
+  const pct = Math.round((done/total)*100);
+  document.getElementById('progress-bar').style.width = pct+'%';
+  document.getElementById('progress-text').textContent = `${done} of ${total} complete`;
+  document.getElementById('progress-pct').textContent = pct+'%';
+  document.getElementById('tab-all-count').textContent = `(${total})`;
+  document.getElementById('tab-out-count').textContent = `(${outstanding})`;
+  document.getElementById('tab-done-count').textContent = `(${done})`;
+  document.getElementById('submit-info').textContent = done===total
+    ? 'All items complete — ready to review.'
+    : `${outstanding} item${outstanding!==1?'s':''} still outstanding. You can review and submit at any time.`;
+}
+
+function setFilter(filter, tab) {
+  currentFilter = filter;
+  document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+  tab.classList.add('active');
+  applyFilter(filter);
+}
+
+function applyFilter(filter) {
+  const s = sessions[currentSession];
+  PHOTO_ITEMS.forEach(item => {
+    const el = document.getElementById('item-'+item.id);
+    if (!el) return;
+    const isDone = s.items[item.id].photos.length>0 || s.items[item.id].na;
+    let show = true;
+    if (filter==='done') show = isDone;
+    if (filter==='outstanding') show = !isDone;
+    el.style.display = show ? 'block' : 'none';
+  });
+  updateProgress();
+}
+
+function goToReview() {
+  const s = sessions[currentSession];
+  document.getElementById('main-screen').style.display = 'none';
+  document.getElementById('review-screen').style.display = 'block';
+  document.getElementById('review-title').textContent = s.vessel;
+  document.getElementById('review-subtitle').textContent = `Installer: ${s.installer} · ${new Date(s.updated).toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'})}`;
+  const donePh = PHOTO_ITEMS.filter(i => s.items[i.id].photos.length>0).length;
+  const na = PHOTO_ITEMS.filter(i => s.items[i.id].na).length;
+  const missing = PHOTO_ITEMS.length - donePh - na;
+  document.getElementById('stat-done').textContent = donePh;
+  document.getElementById('stat-missing').textContent = missing;
+  document.getElementById('stat-na').textContent = na;
+  document.getElementById('review-list').innerHTML = PHOTO_ITEMS.map(item => {
+    const state = s.items[item.id];
+    const hasPh = state.photos.length>0;
+    const isNA = state.na;
+    let cls = 'review-section ' + (hasPh?'done-section':isNA?'na-section':'missing-section');
+    return `<div class="${cls}">
+      <div class="review-section-head">
+        <div class="review-dot"></div>
+        <div class="review-label">${item.label}</div>
+        <div class="review-count">${hasPh?state.photos.length+' photo'+(state.photos.length>1?'s':''):isNA?'N/A':'Missing'}</div>
+      </div>
+      ${hasPh?`<div class="review-thumbs">${state.photos.map(p=>`<div class="review-thumb"><img src="${p}" loading="lazy"></div>`).join('')}</div>`:''}
+      ${!hasPh&&!isNA?'<div class="review-msg missing">⚠️ No photos captured for this item</div>':''}
+      ${isNA?'<div class="review-msg na">Marked as not applicable</div>':''}
+    </div>`;
+  }).join('');
+  window.scrollTo(0,0);
+}
+
+function goBackToChecklist() {
+  document.getElementById('review-screen').style.display = 'none';
+  document.getElementById('main-screen').style.display = 'block';
+  setFilter('outstanding', document.querySelectorAll('.filter-tab')[1]);
+}
+
+function shareStatus() {
+  const s = sessions[currentSession];
+  const done = PHOTO_ITEMS.filter(i => s.items[i.id].photos.length>0).length;
+  const na = PHOTO_ITEMS.filter(i => s.items[i.id].na).length;
+  const missing = PHOTO_ITEMS.filter(i => !s.items[i.id].photos.length && !s.items[i.id].na);
+  let msg = `📸 *EcoPro Installation Photos*\n🚢 Vessel: ${s.vessel}\n👤 Installer: ${s.installer}\n📅 ${new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}\n\n`;
+  msg += `✅ Complete: ${done}/18\n`;
+  if (na>0) msg += `➖ Not applicable: ${na}\n`;
+  if (missing.length>0) { msg += `⚠️ Missing (${missing.length}):\n`; missing.forEach(i => msg+=`  • ${i.label}\n`); }
+  else msg += `🎉 All required items complete!\n`;
+  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+}
+
+function confirmClear() {
+  const s = sessions[currentSession];
+  showModal(`Clear "${s.vessel}"?`, 'This will permanently delete all saved photos and progress for this job.', () => {
+    delete sessions[currentSession]; saveSessions(); closeModal(); goToSetup(); showToast('Job cleared');
+  });
+}
+
+function confirmDeleteSession(key) {
+  const s = sessions[key];
+  showModal(`Delete "${s.vessel}"?`, 'This will permanently delete all saved photos for this job.', () => {
+    delete sessions[key]; saveSessions(); renderSetup(); closeModal(); showToast('Job deleted');
+  });
+}
+
+function showModal(title, body, onConfirm) {
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-body').textContent = body;
+  document.getElementById('modal-confirm-btn').onclick = onConfirm;
+  document.getElementById('modal-overlay').classList.add('show');
+}
+function closeModal() { document.getElementById('modal-overlay').classList.remove('show'); }
+
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+loadSessions();
+renderSetup();
+</script>
+</body>
+</html>
