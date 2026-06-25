@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <title>EcoPro Installation Photos v5</title>
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -247,9 +247,8 @@ header{background:var(--navy);padding:16px 20px 14px;position:sticky;top:0;z-ind
 <div class="toast" id="toast"></div>
 
 <script>
-var EMAILJS_SERVICE  = 'service_xuaj2ik';
-var EMAILJS_TEMPLATE = 'template_hv1cr7h';
-var EMAILJS_KEY      = '2_uY_bTfLmNNdRRXM';
+var RESEND_API_KEY = 're_DZxg4xxp_4hF2egH1527H1UPZkpwrTBDW';
+var NOTIFY_EMAIL   = 'info@ecomotus.com';
 
 var PHOTO_ITEMS = [
   {id:1,  label:'Engine location in Engine Room', note:'May require multiple photos'},
@@ -609,7 +608,7 @@ function goToReview() {
   window.scrollTo(0,0);
 }
 
-// ── SEND BY EMAIL ────────────────────────────────────────────────────────────
+// ── SEND BY EMAIL (Resend + zip) ─────────────────────────────────────────────
 async function sendByEmail() {
   var s = sessions[currentSession];
   var naFlags = s.naFlags || {};
@@ -626,86 +625,113 @@ async function sendByEmail() {
   }
 
   try {
-    emailjs.init({publicKey: EMAILJS_KEY});
+    // Step 1: Compress all photos
     setStatus('Compressing photos…', 5, 'Please keep this screen open');
-
     var allPhotos = [];
     for (var ii=0; ii<PHOTO_ITEMS.length; ii++) {
       var item = PHOTO_ITEMS[ii];
       var photos = sessionPhotos[item.id] || [];
       for (var jj=0; jj<photos.length; jj++) {
-        var compressed = await compressImage(photos[jj], 300, 0.25);
-        allPhotos.push({label:item.label, data:compressed, num:jj+1, total:photos.length});
+        var compressed = await compressImage(photos[jj], 1000, 0.7);
+        allPhotos.push({
+          label: item.label,
+          data: compressed,
+          num: jj+1,
+          total: photos.length,
+          filename: String(allPhotos.length+1).padStart(2,'0')+'_'+item.label.replace(/[^a-z0-9]/gi,'_')+(photos.length>1?'_'+String(jj+1):'')+'.jpg'
+        });
       }
     }
 
     if (allPhotos.length === 0) throw new Error('No photos to send');
 
-    for (var b=0; b<allPhotos.length; b++) {
-      var ph = allPhotos[b];
-      var pct = 10+Math.round((b/allPhotos.length)*80);
-      var caption = ph.total>1 ? ph.label+' ('+ph.num+' of '+ph.total+')' : ph.label;
-      setStatus('Sending photo '+(b+1)+' of '+allPhotos.length+'…', pct, caption);
+    // Step 2: Build zip
+    setStatus('Building zip file…', 30, allPhotos.length+' photos');
+    var zip = new JSZip();
+    var folder = zip.folder(s.vessel+' — '+s.installer+' — '+date);
 
-      var subject = 'EcoPro Photo '+(b+1)+'/'+allPhotos.length+' — '+s.vessel+' — '+caption;
-      var message = 'Vessel: '+s.vessel+'\nInstaller: '+s.installer+'\nDate: '+date+'\nPhoto '+(b+1)+' of '+allPhotos.length+': '+caption;
-
-      await emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, {
-        subject: subject,
-        message: message,
-        name: 'EcoPro Installer App',
-        email: 'hydrogenecopro@gmail.com',
-        photo: ph.data
-      });
-
-      await new Promise(function(r){setTimeout(r,600);});
+    for (var k=0; k<allPhotos.length; k++) {
+      var ph = allPhotos[k];
+      // Strip base64 header and add to zip
+      var b64 = ph.data.replace(/^data:image\/\w+;base64,/, '');
+      folder.file(ph.filename, b64, {base64:true});
     }
 
-    // Summary email
-    setStatus('Sending summary…', 93, 'Almost done');
+    setStatus('Compressing zip…', 50, 'Almost ready to send');
+    var zipBlob = await zip.generateAsync({type:'base64', compression:'DEFLATE', compressionOptions:{level:6}});
+
+    // Step 3: Build summary
     var complete = PHOTO_ITEMS.filter(function(i){return (sessionPhotos[i.id]||[]).length>0;});
     var missing  = PHOTO_ITEMS.filter(function(i){return !(sessionPhotos[i.id]||[]).length&&!naFlags[i.id];});
     var naItems  = PHOTO_ITEMS.filter(function(i){return naFlags[i.id];});
 
-    var summaryMsg =
-      'EcoPro Installation Complete\n\n'+
-      'Vessel: '+s.vessel+'\nInstaller: '+s.installer+'\nDate: '+date+'\n\n'+
-      '✅ Complete ('+complete.length+'/'+PHOTO_ITEMS.length+'):\n'+
-      complete.map(function(i){return '  • '+i.label+' ('+(sessionPhotos[i.id]||[]).length+' photo'+((sessionPhotos[i.id]||[]).length>1?'s':'')+')';}).join('\n')+'\n\n'+
-      (missing.length>0?'⚠️ Missing ('+missing.length+'):\n'+missing.map(function(i){return '  • '+i.label;}).join('\n')+'\n\n':'🎉 All items photographed!\n\n')+
-      (naItems.length>0?'➖ Not applicable ('+naItems.length+'):\n'+naItems.map(function(i){return '  • '+i.label;}).join('\n')+'\n\n':'')+
-      'Total photos sent: '+allPhotos.length;
+    var htmlBody =
+      '<div style="font-family:Arial;font-size:14px;color:#1a2e4a">'+
+      '<h2 style="color:#1a2e4a;margin:0 0 12px">EcoPro Installation Photos</h2>'+
+      '<p><strong>Vessel:</strong> '+s.vessel+'<br>'+
+      '<strong>Installer:</strong> '+s.installer+'<br>'+
+      '<strong>Date:</strong> '+date+'</p>'+
+      '<hr style="border:1px solid #d1dce8;margin:16px 0">'+
+      '<p><strong style="color:#2a7a4b">✅ Complete ('+complete.length+'/'+PHOTO_ITEMS.length+'):</strong><br>'+
+      complete.map(function(i){return '• '+i.label+' ('+(sessionPhotos[i.id]||[]).length+' photo'+((sessionPhotos[i.id]||[]).length>1?'s':'')+')';}).join('<br>')+
+      '</p>'+
+      (missing.length>0
+        ? '<p><strong style="color:#c0392b">⚠️ Missing ('+missing.length+'):</strong><br>'+missing.map(function(i){return '• '+i.label;}).join('<br>')+'</p>'
+        : '<p style="color:#2a7a4b"><strong>🎉 All required items photographed!</strong></p>')+
+      (naItems.length>0?'<p><strong>➖ Not applicable ('+naItems.length+'):</strong><br>'+naItems.map(function(i){return '• '+i.label;}).join('<br>')+'</p>':'')+
+      '<hr style="border:1px solid #d1dce8;margin:16px 0">'+
+      '<p><strong>Total photos: '+allPhotos.length+'</strong><br>Photos are attached as a zip file.</p>'+
+      '<p style="color:#b85c00;font-weight:bold;margin-top:12px">📱 Please also upload the full quality photos to Cluster.</p>'+
+      '</div>';
 
-    await emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, {
-      subject: 'EcoPro Summary — '+s.vessel+' — '+s.installer+' — '+date,
-      message: summaryMsg,
-      name: 'EcoPro Installer App',
-      email: 'hydrogenecopro@gmail.com',
-      photo: ''
+    // Step 4: Send via Resend
+    setStatus('Sending email with zip attachment…', 70, 'One moment…');
+    var zipFilename = (s.vessel+' — '+s.installer+' — '+date).replace(/[^a-z0-9 —]/gi,'_')+'.zip';
+
+    var response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer '+RESEND_API_KEY,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        from: 'EcoPro Installer <onboarding@resend.dev>',
+        to: [NOTIFY_EMAIL],
+        subject: 'EcoPro Photos — '+s.vessel+' — '+s.installer+' — '+date,
+        html: htmlBody,
+        attachments: [{
+          filename: zipFilename,
+          content: zipBlob
+        }]
+      })
     });
 
-    setStatus('✅ All done!', 100, allPhotos.length+' photos sent to info@ecomotus.com');
+    var result = await response.json();
+    if (!response.ok) throw new Error(result.message || result.name || JSON.stringify(result));
+
+    setStatus('✅ All done!', 100, allPhotos.length+' photos sent to '+NOTIFY_EMAIL);
     sessions[currentSession].submitted = true;
     saveMeta();
 
     setTimeout(function() {
       ov.style.display = 'none';
       document.getElementById('success-box').style.display = 'block';
-      document.getElementById('success-detail').textContent = allPhotos.length+' photos emailed to info@ecomotus.com.';
+      document.getElementById('success-detail').textContent = allPhotos.length+' photos sent as a zip to '+NOTIFY_EMAIL+'. Please upload full quality photos to Cluster.';
       showToast('✅ '+allPhotos.length+' photos sent!');
     }, 1000);
 
   } catch(err) {
-    console.error('Email error:', err);
-    var msg = (err && (err.text||err.message)) ? (err.text||err.message) : JSON.stringify(err);
-    setStatus('⚠️ Failed: '+msg, 0, 'Tap "Fill gaps" to go back and try again');
+    console.error('Send error:', err);
+    var msg = (err && err.message) ? err.message : JSON.stringify(err);
+    setStatus('⚠️ Failed: '+msg, 0, 'Tap Fill gaps to go back and try again');
     setTimeout(function() {
       ov.style.display = 'none';
       document.getElementById('review-actions-main').style.display='flex';
-    }, 3000);
-    showToast('Failed: '+msg.substring(0,50));
+    }, 4000);
+    showToast('Failed: '+msg.substring(0,60));
   }
 }
+
 
 // ── WHATSAPP ─────────────────────────────────────────────────────────────────
 function shareWhatsApp() {
