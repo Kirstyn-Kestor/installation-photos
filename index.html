@@ -605,7 +605,7 @@ async function submitToGoogleDrive(){
     for(const item of PHOTO_ITEMS){
       const photos = sessionPhotos[item.id]||[];
       for(let idx=0; idx<photos.length; idx++){
-        const compressed = await compressImage(photos[idx], 600, 0.4);
+        const compressed = await compressImage(photos[idx], 400, 0.3);
         allPhotos.push({ label:item.label, data:compressed, num:idx+1, total:photos.length });
       }
     }
@@ -615,7 +615,7 @@ async function submitToGoogleDrive(){
     }
 
     // Batch into groups of 3 photos per email
-    const BATCH = 3;
+    const BATCH = 1;
     const batches = [];
     for(let i=0; i<allPhotos.length; i+=BATCH){
       batches.push(allPhotos.slice(i, i+BATCH));
