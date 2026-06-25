@@ -628,29 +628,27 @@ async function submitToGoogleDrive(){
       const pct = 10 + Math.round((b/batches.length)*75);
       setStatus('Sending email '+(b+1)+' of '+(batches.length+1)+'…', pct, 'Photos '+firstNum+' to '+lastNum+' of '+allPhotos.length);
 
-      let photoHtml = '';
-      batch.forEach((ph,i)=>{
-        const caption = ph.total>1 ? ph.label+' ('+ph.num+' of '+ph.total+')' : ph.label;
-        photoHtml +=
-          '<div style="margin-bottom:24px;font-family:Arial">'+
-          '<p style="font-weight:bold;margin:0 0 6px;color:#1a2e4a;font-size:13px">'+(firstNum+i)+'. '+caption+'</p>'+
-          '<img src="'+ph.data+'" style="max-width:100%;border:1px solid #d1dce8;border-radius:4px">'+
-          '</div>';
-      });
-
-      const subject = 'EcoPro Photos — '+s.vessel+' — '+s.installer+' — '+firstNum+' to '+lastNum+' of '+allPhotos.length;
+      // Send one photo at a time with minimal payload
+      const ph = batch[0];
+      const caption = ph.total>1 ? ph.label+' ('+ph.num+' of '+ph.total+')' : ph.label;
+      const subject = 'EcoPro Photo '+firstNum+'/'+allPhotos.length+' — '+s.vessel+' — '+caption;
+      
+      // Keep message text tiny - photo goes in separate variable
       const message =
-        '<p style="font-family:Arial;color:#1a2e4a"><strong>Vessel:</strong> '+s.vessel+' &nbsp;|&nbsp; '+
-        '<strong>Installer:</strong> '+s.installer+' &nbsp;|&nbsp; '+
-        '<strong>Date:</strong> '+date+'<br>'+
-        '<strong>Batch:</strong> Email '+(b+1)+' of '+(batches.length+1)+' — Photos '+firstNum+' to '+lastNum+' of '+allPhotos.length+'</p>'+
-        '<hr style="border:1px solid #d1dce8;margin:12px 0">'+
-        photoHtml;
+        'Vessel: '+s.vessel+'
+'+
+        'Installer: '+s.installer+'
+'+
+        'Date: '+date+'
+'+
+        'Photo '+firstNum+' of '+allPhotos.length+': '+caption;
 
       await emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, {
-        subject, message,
+        subject,
+        message,
         name:'EcoPro Installer App',
-        email:'hydrogenecopro@gmail.com'
+        email:'hydrogenecopro@gmail.com',
+        photo: ph.data
       });
 
       if(b < batches.length-1) await new Promise(r=>setTimeout(r, 800));
