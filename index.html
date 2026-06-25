@@ -140,6 +140,7 @@
   .btn-modal-cancel { background: var(--grey-light); color: var(--text-soft); }
   .btn-modal-confirm { background: var(--red); color: var(--white); }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 </head>
 <body>
 
@@ -218,7 +219,10 @@
   <div id="review-list"></div>
 
   <div id="post-submit" style="display:none">
-    <a class="drive-link" id="drive-link" target="_blank">📁 Open in Google Drive →</a>
+    <div style="background:var(--green-light);border:1px solid var(--green);border-radius:8px;padding:14px;text-align:center;margin-bottom:12px">
+      <div style="font-size:24px;margin-bottom:4px">✅</div>
+      <div style="font-weight:700;color:var(--green);font-size:15px">Photos sent to info@ecomotus.com</div>
+    </div>
     <div class="review-actions" style="margin-top:12px">
       <button class="btn-review-action btn-share" onclick="shareStatus()">📲 Share update on WhatsApp</button>
     </div>
@@ -226,7 +230,7 @@
 
   <div class="review-actions" id="review-actions-main">
     <button class="btn-review-action btn-go-back" onclick="goBackToChecklist()">← Fill gaps</button>
-    <button class="btn-review-action" id="btn-upload" onclick="submitToGoogleDrive()" style="background:var(--green);color:var(--white);border:none">⬆️ Upload &amp; Send Email</button>
+    <button class="btn-review-action" id="btn-upload" onclick="submitToGoogleDrive()" style="background:var(--green);color:var(--white);border:none">📧 Send Photos by Email</button>
   </div>
   <div class="review-actions" id="review-actions-secondary" style="margin-top:0">
     <button class="btn-review-action btn-clear" onclick="confirmClear()">🗑 Clear job</button>
@@ -247,8 +251,10 @@
 <div class="toast" id="toast"></div>
 
 <script>
-// ── REPLACE THIS WITH YOUR GOOGLE APPS SCRIPT URL AFTER DEPLOYING ────────────
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw9OACpMFXnw4T10EgXKXqSNkLl8gDvsYem0ccG4rAAlXHDYF8Fjh7TBwPBOCiM24k/exec';
+// ── EMAILJS CONFIG ───────────────────────────────────────────────────────────
+const EMAILJS_SERVICE  = 'service_xuaj2ik';
+const EMAILJS_TEMPLATE = 'template_hv1cr7h';
+const EMAILJS_KEY      = '2_uY_bTfLmNNdRRXM';
 // ─────────────────────────────────────────────────────────────────────────────
 
 const PHOTO_ITEMS = [
@@ -553,136 +559,137 @@ function goBackToChecklist(){
 }
 
 // ── GOOGLE DRIVE UPLOAD ───────────────────────────────────────────────────────
-async function callScript(payload) {
-  // Use no-cors iframe trick — the only fully reliable way to POST to Google Apps Script
-  return new Promise((resolve, reject) => {
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = SCRIPT_URL;
-    form.target = '_gasframe';
-    form.style.display = 'none';
-
-    const input = document.createElement('input');
-    input.type = 'hidden';
-    input.name = 'payload';
-    input.value = JSON.stringify(payload);
-    form.appendChild(input);
-
-    // Create hidden iframe to receive response
-    let iframe = document.getElementById('_gasframe');
-    if (!iframe) {
-      iframe = document.createElement('iframe');
-      iframe.name = '_gasframe';
-      iframe.id = '_gasframe';
-      iframe.style.display = 'none';
-      document.body.appendChild(iframe);
-    }
-
-    // For createJob we need the response — use fetch with no-cors then check via GET
-    if (payload.action === 'createJob' || payload.action === 'completeJob') {
-      // Fire POST fire-and-forget, then poll via GET for result
-      fetch(SCRIPT_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify(payload)
-      }).then(() => {
-        // Give script 2 seconds to process then check status via GET
-        setTimeout(async () => {
-          try {
-            const checkPayload = { action: 'checkJob', jobId: payload.jobId };
-            const res = await fetch(SCRIPT_URL + '?payload=' + encodeURIComponent(JSON.stringify(checkPayload)));
-            const data = await res.json();
-            resolve(data);
-          } catch(e) {
-            // Assume success if we can't check
-            resolve({ success: true, folderUrl: '' });
-          }
-        }, 2000);
-      }).catch(reject);
-    } else {
-      // For photo uploads just fire and forget
-      fetch(SCRIPT_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify(payload)
-      }).then(() => resolve({ success: true })).catch(reject);
-    }
+async function sendEmail(subject, message) {
+  const result = await emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, {
+    subject: subject,
+    message: message,
+    name: 'EcoPro Installer App',
+    email: 'hydrogenecopro@gmail.com'
   });
+  if(result.status !== 200) throw new Error('EmailJS returned status '+result.status);
+  return result;
 }
 
 async function submitToGoogleDrive(){
-  if(SCRIPT_URL==='YOUR_GOOGLE_APPS_SCRIPT_URL_HERE'){
-    showToast('⚠️ Script URL not configured yet');
-    return;
-  }
   const s=sessions[currentSession]; const naFlags=s.naFlags||{};
   const uploadBtn=document.getElementById('btn-upload');
   uploadBtn.disabled=true;
   document.getElementById('upload-progress').style.display='block';
-  document.getElementById('upload-title').textContent='Uploading to Google Drive…';
+  document.getElementById('upload-title').textContent='Sending photos by email…';
   document.getElementById('review-actions-main').style.display='none';
 
   const date=new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
-  const jobId=currentSession+'_'+Date.now();
 
-  function setUploadStatus(text,pct){
+  function setStatus(text,pct){
     document.getElementById('upload-status').textContent=text;
     document.getElementById('upload-bar').style.width=pct+'%';
   }
 
   try{
-    // Step 1: Create job folder
-    setUploadStatus('Creating Google Drive folder…',5);
-    const createData = await callScript({action:'createJob',vessel:s.vessel,installer:s.installer,jobId,date});
-    if(!createData.success) throw new Error(createData.error||'Failed to create folder');
+    emailjs.init({ publicKey: EMAILJS_KEY });
 
-    // Step 2: Upload photos one by one
+    // Collect and compress all photos
+    setStatus('Compressing photos…', 5);
     const allPhotos=[];
-    PHOTO_ITEMS.forEach(item=>{
-      (sessionPhotos[item.id]||[]).forEach((p,idx)=>{
-        allPhotos.push({itemId:item.id,label:item.label,photoData:p,index:allPhotos.length});
-      });
-    });
-
-    for(let i=0;i<allPhotos.length;i++){
-      const ph=allPhotos[i];
-      const pct=5+Math.round((i/allPhotos.length)*85);
-      setUploadStatus('Uploading photo '+(i+1)+' of '+allPhotos.length+' — '+ph.label+'…',pct);
-      const upData = await callScript({action:'uploadPhoto',jobId,photoData:ph.photoData,label:ph.label,index:ph.index});
-      if(!upData.success) throw new Error('Failed to upload: '+ph.label);
+    for(const item of PHOTO_ITEMS){
+      const photos = sessionPhotos[item.id]||[];
+      for(let idx=0; idx<photos.length; idx++){
+        // Compress to 600px / 0.4 quality = ~25-40KB each
+        const compressed = await compressImage(photos[idx], 600, 0.4);
+        allPhotos.push({ label: item.label, data: compressed, num: idx+1, total: photos.length });
+      }
     }
 
-    // Step 3: Complete and send email
-    setUploadStatus('Sending notification email…',93);
-    const summary=PHOTO_ITEMS.map(item=>({
-      label:item.label,
-      status:(sessionPhotos[item.id]||[]).length>0?'done':naFlags[item.id]?'na':'missing'
-    }));
-    const completeData = await callScript({action:'completeJob',jobId,summary});
-    if(!completeData.success) throw new Error(completeData.error||'Failed to complete');
+    if(allPhotos.length === 0){
+      throw new Error('No photos to send — please take some photos first');
+    }
 
-    setUploadStatus('✅ All done!',100);
+    // Batch into groups of 4
+    const BATCH = 4;
+    const batches = [];
+    for(let i=0; i<allPhotos.length; i+=BATCH){
+      batches.push(allPhotos.slice(i, i+BATCH));
+    }
+
+    // Send each batch as one email with photos in the body as img tags
+    for(let b=0; b<batches.length; b++){
+      const batch = batches[b];
+      const pct = 10 + Math.round((b/batches.length)*75);
+      setStatus('Sending email '+(b+1)+' of '+batches.length+' ('+batch.length+' photos)…', pct);
+
+      // Build HTML message with embedded photos
+      let photoHtml = '';
+      batch.forEach((ph,i)=>{
+        const caption = ph.total > 1 ? ph.label+' ('+ph.num+' of '+ph.total+')' : ph.label;
+        photoHtml += '<div style="margin-bottom:20px">'+
+          '<p style="font-weight:bold;margin:0 0 6px;font-family:Arial">'+(allPhotos.indexOf(ph)+1)+'. '+caption+'</p>'+
+          '<img src="'+ph.data+'" style="max-width:100%;border:1px solid #ccc;border-radius:4px">'+
+          '</div>';
+      });
+
+      const firstIdx = allPhotos.indexOf(batch[0])+1;
+      const lastIdx  = allPhotos.indexOf(batch[batch.length-1])+1;
+      const subject  = 'EcoPro Photos — '+s.vessel+' — '+s.installer+
+                       ' — Photos '+firstIdx+'-'+lastIdx+' of '+allPhotos.length+
+                       ' (Email '+(b+1)+' of '+batches.length+')';
+
+      const message = '<h3 style="font-family:Arial;color:#1a2e4a">EcoPro Installation Photos</h3>'+
+        '<p style="font-family:Arial"><strong>Vessel:</strong> '+s.vessel+'<br>'+
+        '<strong>Installer:</strong> '+s.installer+'<br>'+
+        '<strong>Date:</strong> '+date+'<br>'+
+        '<strong>Batch:</strong> '+(b+1)+' of '+batches.length+' — Photos '+firstIdx+' to '+lastIdx+' of '+allPhotos.length+'</p>'+
+        '<hr style="border:1px solid #d1dce8">'+
+        photoHtml;
+
+      await sendEmail(subject, message);
+
+      // Pause between emails to avoid rate limiting
+      if(b < batches.length-1) await new Promise(r=>setTimeout(r, 1000));
+    }
+
+    // Final summary email
+    setStatus('Sending summary email…', 88);
+    const complete = PHOTO_ITEMS.filter(i=>(sessionPhotos[i.id]||[]).length>0);
+    const missing  = PHOTO_ITEMS.filter(i=>!(sessionPhotos[i.id]||[]).length&&!naFlags[i.id]);
+    const na       = PHOTO_ITEMS.filter(i=>naFlags[i.id]);
+
+    const summaryHtml =
+      '<h3 style="font-family:Arial;color:#1a2e4a">EcoPro Installation Summary</h3>'+
+      '<p style="font-family:Arial"><strong>Vessel:</strong> '+s.vessel+'<br>'+
+      '<strong>Installer:</strong> '+s.installer+'<br>'+
+      '<strong>Date:</strong> '+date+'</p>'+
+      '<hr style="border:1px solid #d1dce8">'+
+      '<p style="font-family:Arial"><strong>✅ Complete ('+complete.length+'/'+PHOTO_ITEMS.length+'):</strong><br>'+
+      complete.map(i=>'• '+i.label+' ('+(sessionPhotos[i.id]||[]).length+' photo'+((sessionPhotos[i.id]||[]).length>1?'s':'')+')').join('<br>')+
+      '</p>'+
+      (missing.length>0
+        ? '<p style="font-family:Arial;color:#c0392b"><strong>⚠️ Missing ('+missing.length+'):</strong><br>'+missing.map(i=>'• '+i.label).join('<br>')+'</p>'
+        : '<p style="font-family:Arial;color:#2a7a4b"><strong>🎉 All required items photographed!</strong></p>')+
+      (na.length>0 ? '<p style="font-family:Arial"><strong>➖ Not applicable ('+na.length+'):</strong><br>'+na.map(i=>'• '+i.label).join('<br>')+'</p>' : '')+
+      '<p style="font-family:Arial"><strong>Total photos sent: '+allPhotos.length+'</strong><br>Sent in '+batches.length+' email'+(batches.length>1?'s':'')+'.</p>';
+
+    await sendEmail('EcoPro Summary — '+s.vessel+' — '+s.installer+' — '+date, summaryHtml);
+
+    setStatus('✅ All done! '+allPhotos.length+' photos sent in '+batches.length+' emails.', 100);
     sessions[currentSession].submitted=true;
-    sessions[currentSession].driveUrl=completeData.folderUrl;
     saveMeta();
 
     setTimeout(()=>{
       document.getElementById('upload-progress').style.display='none';
       document.getElementById('post-submit').style.display='block';
-      document.getElementById('drive-link').href=completeData.folderUrl;
-      showToast('✅ Uploaded & email sent!');
-    },800);
+      showToast('✅ '+allPhotos.length+' photos emailed to info@ecomotus.com');
+    }, 800);
 
   }catch(err){
-    setUploadStatus('⚠️ '+err.message,0);
-    document.getElementById('upload-title').textContent='Upload failed';
+    console.error('EmailJS error:', err);
+    setStatus('⚠️ '+(err.text||err.message||'Send failed'), 0);
+    document.getElementById('upload-title').textContent='Send failed';
     uploadBtn.disabled=false;
     document.getElementById('review-actions-main').style.display='flex';
-    showToast('Upload failed — check connection and try again');
+    showToast('Failed — check connection and try again');
   }
 }
+
 
 function shareStatus(){
   const s=sessions[currentSession]; const naFlags=s.naFlags||{};
