@@ -631,6 +631,17 @@ async function submitToGoogleDrive(){
 
       // Send one photo at a time with minimal payload
       const ph = batch[0];
+      // Log size for debugging
+      const sizeKB = Math.round(ph.data.length / 1024);
+      console.log('Photo size:', sizeKB, 'KB', ph.label);
+      setStatus('Photo size: '+sizeKB+'KB — sending…', pct, ph.label);
+      if(sizeKB > 45) {
+        // Re-compress even smaller
+        ph.data = await compressImage(ph.data, 200, 0.2);
+        const newSize = Math.round(ph.data.length / 1024);
+        console.log('Re-compressed to:', newSize, 'KB');
+        setStatus('Re-compressed to '+newSize+'KB — sending…', pct, ph.label);
+      }
       const caption = ph.total>1 ? ph.label+' ('+ph.num+' of '+ph.total+')' : ph.label;
       const subject = 'EcoPro Photo '+firstNum+'/'+allPhotos.length+' — '+s.vessel+' — '+caption;
       
