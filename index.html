@@ -651,12 +651,9 @@ async function submitToGoogleDrive(){
       
       // Keep message text tiny - photo goes in separate variable
       const message =
-        'Vessel: '+s.vessel+'
-'+
-        'Installer: '+s.installer+'
-'+
-        'Date: '+date+'
-'+
+        'Vessel: '+s.vessel+'\n'+
+        'Installer: '+s.installer+'\n'+
+        'Date: '+date+'\n'+
         'Photo '+firstNum+' of '+allPhotos.length+': '+caption;
 
       try {
