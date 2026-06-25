@@ -256,7 +256,7 @@
 
 <script>
 // ── GOOGLE APPS SCRIPT URL ───────────────────────────────────────────────────
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzYZGpGXpUzbi425hRCXTdif6aEOJ3XCKUrmReMQ7Zl9e9IRCZNb43DIdhEltV7fUQ/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby_0K14MVeXWcC9uNpukNZTpUhR7DWtjHIhv8Svwt9WRMZ2oL-ch6NWrKggdLXzBVc/exec';
 // ─────────────────────────────────────────────────────────────────────────────
 
 const PHOTO_ITEMS = [
@@ -450,7 +450,7 @@ async function handlePhoto(id,input){
   const reader=new FileReader();
   reader.onload=async e=>{
     try{
-      const compressed=await compressImage(e.target.result,800,0.5);
+      const compressed=await compressImage(e.target.result,400,0.3);
       const photos=sessionPhotos[id]||[];
       const newIndex=photos.length;
       await savePhotoDB(currentSession,id,newIndex,compressed);
@@ -606,15 +606,33 @@ async function submitToGoogleDrive(){
       });
     });
 
+    const CHUNK = 500000; // 500KB chunks
     for(let i=0;i<allPhotos.length;i++){
       const ph=allPhotos[i];
       const pct=5+Math.round((i/Math.max(allPhotos.length,1))*80);
       setStatus('Uploading photo '+(i+1)+' of '+allPhotos.length+' — '+ph.label+'…', pct);
-      const upData = await callScript({
-        action:'uploadPhoto', folderId:folderId,
-        photoData:ph.photoData, label:ph.label, index:ph.index
-      });
-      if(!upData.success) throw new Error(upData.error||'Failed on: '+ph.label);
+      
+      const data = ph.photoData;
+      if(data.length <= CHUNK){
+        // Small enough to send in one go
+        const upData = await callScript({
+          action:'uploadPhoto', folderId:folderId,
+          photoData:data, label:ph.label, index:ph.index
+        });
+        if(!upData.success) throw new Error(upData.error||'Failed on: '+ph.label);
+      } else {
+        // Send in chunks
+        const totalChunks = Math.ceil(data.length / CHUNK);
+        for(let c=0; c<totalChunks; c++){
+          const chunk = data.substring(c*CHUNK, (c+1)*CHUNK);
+          const upData = await callScript({
+            action:'uploadPhotoChunk', folderId:folderId,
+            chunk:chunk, chunkIndex:c, totalChunks:totalChunks,
+            label:ph.label, index:ph.index
+          });
+          if(!upData.success) throw new Error(upData.error||'Failed chunk '+c+' on: '+ph.label);
+        }
+      }
     }
 
     // Step 3: Send summary email
