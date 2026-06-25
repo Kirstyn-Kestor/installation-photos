@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>EcoPro Installation Photos v6</title>
+<title>EcoPro Installation Photos v7</title>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -803,21 +803,22 @@ async function testEmail() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        action: 'sendSummary',
         vessel: 'TEST',
         installer: 'TEST',
         date: 'Test',
-        totalPhotos: 0,
-        totalEmails: 0,
+        totalPhotos: 1,
+        totalEmails: 1,
         complete: [{label:'Test item', count:1}],
         missing: [],
         na: [],
-        notifyEmail: NOTIFY_EMAIL,
+        notifyEmail: 'info@ecomotus.com',
         resendKey: RESEND_API_KEY
       })
     });
     var result = await response.json();
     if (result.success) {
-      showToast('✅ Test email sent! Check kirstyn.kestor@gmail.com');
+      showToast('✅ Test email sent! Check info@ecomotus.com');
     } else {
       showToast('❌ Failed: ' + (result.error||'unknown').substring(0,60));
       alert('Error: ' + result.error);
