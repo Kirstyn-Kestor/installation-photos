@@ -3,7 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>EcoPro Installation Photos</title>
+<title>EcoPro Installation Photos v3</title>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
@@ -50,7 +53,7 @@
   .checklist { padding: 0 16px; }
   .photo-item { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 10px; overflow: hidden; border: 1.5px solid var(--border); }
   .photo-item.done { border-color: var(--green); }
-  .photo-item.na { border-color: var(--border); opacity: 0.7; }
+  .photo-item.na { border-color: var(--green); }
   .item-header { display: flex; align-items: center; padding: 13px 14px; gap: 12px; cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; }
   .item-number { width: 28px; height: 28px; border-radius: 50%; background: var(--grey-light); border: 1.5px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: var(--text-soft); flex-shrink: 0; }
   .photo-item.done .item-number { background: var(--green); border-color: var(--green); color: var(--white); }
@@ -58,7 +61,7 @@
   .item-label .conditional { display: block; font-size: 11px; font-weight: 500; color: var(--amber); margin-top: 2px; font-style: italic; }
   .item-count { font-size: 12px; font-weight: 600; color: var(--blue); background: var(--accent); padding: 3px 8px; border-radius: 12px; white-space: nowrap; }
   .photo-item.done .item-count { color: var(--green); background: var(--green-light); }
-  .photo-item.na .item-count { color: var(--amber); background: var(--amber-light); }
+  .photo-item.na .item-count { color: var(--green); background: var(--green-light); }
   .item-chevron { color: var(--grey); font-size: 16px; transition: transform 0.2s; flex-shrink: 0; }
   .photo-item.expanded .item-chevron { transform: rotate(90deg); }
   .item-body { display: none; padding: 0 14px 14px; border-top: 1px solid var(--border); }
@@ -78,7 +81,7 @@
   .btn-na { padding: 12px 12px; background: var(--grey-light); color: var(--text-soft); border: 1.5px solid var(--border); border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
   .btn-na.active { background: var(--amber-light); border-color: var(--amber); color: var(--amber); }
   .hidden-input { display: none; }
-  .na-note { font-size: 13px; color: var(--amber); background: var(--amber-light); border-radius: 6px; padding: 8px 10px; margin-top: 10px; font-style: italic; }
+  .na-note { font-size: 13px; color: var(--green); background: var(--green-light); border-radius: 6px; padding: 8px 10px; margin-top: 10px; font-weight: 600; }
   .submit-section { padding: 16px; margin-top: 8px; }
   .submit-card { background: var(--white); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow-card); text-align: center; }
   .submit-card h3 { font-size: 16px; font-weight: 700; color: var(--navy); margin-bottom: 6px; }
@@ -195,7 +198,7 @@
   </div>
 </div>
 
-<div id="review-screen">
+<div id="review-screen" style="padding:20px 16px;">
   <div class="review-header">
     <h2 id="review-title"></h2>
     <p id="review-subtitle"></p>
@@ -206,7 +209,7 @@
     </div>
   </div>
 
-  <div class="upload-progress" id="upload-progress">
+  <div class="upload-progress" id="upload-progress" style="display:none">
     <h3 id="upload-title">Uploading to Google Drive…</h3>
     <div class="upload-bar-wrap"><div class="upload-bar" id="upload-bar"></div></div>
     <div class="upload-status" id="upload-status">Preparing…</div>
@@ -216,14 +219,16 @@
 
   <div id="post-submit" style="display:none">
     <a class="drive-link" id="drive-link" target="_blank">📁 Open in Google Drive →</a>
+    <div class="review-actions" style="margin-top:12px">
+      <button class="btn-review-action btn-share" onclick="shareStatus()">📲 Share update on WhatsApp</button>
+    </div>
   </div>
 
   <div class="review-actions" id="review-actions-main">
     <button class="btn-review-action btn-go-back" onclick="goBackToChecklist()">← Fill gaps</button>
-    <button class="btn-review-action btn-submit" id="btn-upload" onclick="submitToGoogleDrive()" style="background:var(--green);color:white">Upload &amp; Send Email</button>
+    <button class="btn-review-action" id="btn-upload" onclick="submitToGoogleDrive()" style="background:var(--green);color:var(--white);border:none">⬆️ Upload &amp; Send Email</button>
   </div>
-  <div class="review-actions" style="margin-top:0">
-    <button class="btn-review-action btn-share" onclick="shareStatus()">Share via WhatsApp</button>
+  <div class="review-actions" id="review-actions-secondary" style="margin-top:0">
     <button class="btn-review-action btn-clear" onclick="confirmClear()">🗑 Clear job</button>
   </div>
 </div>
@@ -243,7 +248,7 @@
 
 <script>
 // ── REPLACE THIS WITH YOUR GOOGLE APPS SCRIPT URL AFTER DEPLOYING ────────────
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzYr6GnbMmgconfssj_IChDbVBnmm1AMUeI6ZbMgE6dLHXd6vRkxmOUPCKmnsOpmGxD1A/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxo32sgN8737WU7v-LQ2ytBTbSBStbkF6H8f8xRXGSzgHa6X-fGu94xIi23QmM5rA/exec';
 // ─────────────────────────────────────────────────────────────────────────────
 
 const PHOTO_ITEMS = [
@@ -401,10 +406,10 @@ function renderChecklist(){
         ${photos.length>0?`<div class="thumb-grid">${thumbs}</div>`:''}
         <div class="item-actions">
           <button class="btn-photo" onclick="triggerPhoto(${item.id})">📷 ${isDone?'Add another':'Take photo'}</button>
-          ${item.conditional?`<button class="btn-na${isNA?' active':''}" onclick="toggleNA(${item.id})">Not applicable</button>`:''}
+          <button class="btn-na${isNA?' active':''}" onclick="toggleNA(${item.id})">${isNA?'✓ Marked N/A':'Mark as N/A'}</button>
         </div>
         <div class="saving-indicator" id="saving-${item.id}"></div>
-        ${isNA?'<div class="na-note">Marked as not applicable for this installation.</div>':''}
+        ${isNA?'<div class="na-note">✓ Marked as not applicable — counts as complete.</div>':''}
         <input type="file" accept="image/*" capture="environment" class="hidden-input" id="input-${item.id}" onchange="handlePhoto(${item.id},this)">
       </div>
     </div>`;
