@@ -256,7 +256,7 @@
 
 <script>
 // ── GOOGLE APPS SCRIPT URL ───────────────────────────────────────────────────
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw9OACpMFXnw4T10EgXKXqSNkLl8gDvsYem0ccG4rAAlXHDYF8Fjh7TBwPBOCiM24k/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzYZGpGXpUzbi425hRCXTdif6aEOJ3XCKUrmReMQ7Zl9e9IRCZNb43DIdhEltV7fUQ/exec';
 // ─────────────────────────────────────────────────────────────────────────────
 
 const PHOTO_ITEMS = [
@@ -569,7 +569,7 @@ async function callScript(payload) {
   });
   const text = await res.text();
   try { return JSON.parse(text); }
-  catch(e) { return { success: true }; } // if we can't parse, assume success
+  catch(e) { return { success: true }; }
 }
 
 async function submitToGoogleDrive(){
@@ -582,7 +582,6 @@ async function submitToGoogleDrive(){
   document.getElementById('review-actions-main').style.display='none';
 
   const date=new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
-  const jobId=currentSession+'_'+Date.now();
 
   function setStatus(text,pct){
     document.getElementById('upload-status').textContent=text;
@@ -590,11 +589,16 @@ async function submitToGoogleDrive(){
   }
 
   try{
-    // Step 1: Create folder
+    // Step 1: Create folder — get folderId back
     setStatus('Creating Google Drive folder…', 5);
-    const createData = await callScript({action:'createJob',vessel:s.vessel,installer:s.installer,jobId,date});
+    const createData = await callScript({
+      action:'createJob', vessel:s.vessel, installer:s.installer, date:date
+    });
+    if(!createData.success) throw new Error(createData.error||'Could not create folder');
+    const folderId  = createData.folderId;
+    const folderUrl = createData.folderUrl;
 
-    // Step 2: Upload photos one by one
+    // Step 2: Upload photos one by one, passing folderId each time
     const allPhotos=[];
     PHOTO_ITEMS.forEach(item=>{
       (sessionPhotos[item.id]||[]).forEach((p,idx)=>{
@@ -606,20 +610,28 @@ async function submitToGoogleDrive(){
       const ph=allPhotos[i];
       const pct=5+Math.round((i/Math.max(allPhotos.length,1))*80);
       setStatus('Uploading photo '+(i+1)+' of '+allPhotos.length+' — '+ph.label+'…', pct);
-      await callScript({action:'uploadPhoto',jobId,photoData:ph.photoData,label:ph.label,index:ph.index});
+      const upData = await callScript({
+        action:'uploadPhoto', folderId:folderId,
+        photoData:ph.photoData, label:ph.label, index:ph.index
+      });
+      if(!upData.success) throw new Error(upData.error||'Failed on: '+ph.label);
     }
 
-    // Step 3: Complete and send email
+    // Step 3: Send summary email
     setStatus('Sending notification email…', 90);
     const summary=PHOTO_ITEMS.map(item=>({
       label:item.label,
       status:(sessionPhotos[item.id]||[]).length>0?'done':naFlags[item.id]?'na':'missing'
     }));
-    const completeData = await callScript({action:'completeJob',jobId,summary});
+    await callScript({
+      action:'completeJob', vessel:s.vessel, installer:s.installer,
+      date:date, folderId:folderId, folderUrl:folderUrl,
+      photoCount:allPhotos.length, summary:summary
+    });
 
     setStatus('✅ All done!', 100);
     sessions[currentSession].submitted=true;
-    sessions[currentSession].driveUrl=completeData.folderUrl||'';
+    sessions[currentSession].driveUrl=folderUrl;
     saveMeta();
 
     document.getElementById('upload-spinner').style.display='none';
@@ -628,11 +640,9 @@ async function submitToGoogleDrive(){
       document.getElementById('post-submit').style.display='block';
       const detail=document.getElementById('success-detail');
       if(detail) detail.textContent=allPhotos.length+' photos uploaded to Google Drive. Email sent to info@ecomotus.com.';
-      if(completeData.folderUrl){
-        const link=document.getElementById('drive-link');
-        if(link){link.href=completeData.folderUrl;link.style.display='block';}
-      }
-      showToast('✅ '+allPhotos.length+' photos uploaded successfully!');
+      const link=document.getElementById('drive-link');
+      if(link && folderUrl){link.href=folderUrl;link.style.display='block';}
+      showToast('✅ '+allPhotos.length+' photos uploaded!');
     }, 800);
 
   }catch(err){
