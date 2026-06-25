@@ -222,7 +222,6 @@ header{background:var(--navy);padding:16px 20px 14px;position:sticky;top:0;z-ind
   <div class="review-actions">
     <button class="btn-action" id="share-sheet-btn" style="background:var(--blue);color:white">📋 Save &amp; Share contact sheet</button>
     <button class="btn-action btn-go-back" id="fill-gaps-btn">← Fill gaps</button>
-    <button class="btn-action btn-whatsapp" id="whatsapp-btn">📲 Share on WhatsApp</button>
   </div>
   <div class="review-actions" style="margin-top:0">
     <button class="btn-action btn-clear" id="clear-btn">🗑 Clear job</button>
@@ -597,24 +596,6 @@ function goToReview() {
   window.scrollTo(0,0);
 }
 
-function shareWhatsApp() {
-  var s = sessions[currentSession];
-  var naFlags = s.naFlags || {};
-  var done = PHOTO_ITEMS.filter(function(i){return (sessionPhotos[i.id]||[]).length>0;}).length;
-  var na = PHOTO_ITEMS.filter(function(i){return naFlags[i.id];}).length;
-  var missing = PHOTO_ITEMS.filter(function(i){return !(sessionPhotos[i.id]||[]).length&&!naFlags[i.id];});
-  var date = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
-  var msg = '📸 *EcoPro Installation Photos*\n🚢 '+s.vessel+'\n👤 '+s.installer+'\n📅 '+date+'\n\n';
-  msg += '✅ Complete: '+done+'/'+PHOTO_ITEMS.length+'\n';
-  if (na>0) msg += '➖ N/A: '+na+'\n';
-  if (missing.length>0) { msg += '⚠️ Missing ('+missing.length+'):\n'; missing.forEach(function(i){msg+='  • '+i.label+'\n';}); }
-  else msg += '🎉 All items complete!\n';
-  msg += '\n📱 Photos being uploaded to Cluster.';
-  sessions[currentSession].submitted = true;
-  saveMeta();
-  window.open('https://chat.whatsapp.com/Cvej0m20riN8a1soG3XCY6?text='+encodeURIComponent(msg),'_blank');
-}
-
 function showModal(title, body, onConfirm) {
   document.getElementById('modal-title').textContent = title;
   document.getElementById('modal-body').textContent = body;
@@ -817,7 +798,6 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('main-screen').style.display='block';
     setFilter('outstanding');
   });
-  document.getElementById('whatsapp-btn').addEventListener('click', shareWhatsApp);
   document.getElementById('clear-btn').addEventListener('click', confirmClear);
   document.getElementById('modal-cancel').addEventListener('click', closeModal);
   document.getElementById('share-sheet-btn').addEventListener('click', saveContactSheet);
