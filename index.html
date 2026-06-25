@@ -609,7 +609,7 @@ function goToReview() {
   window.scrollTo(0,0);
 }
 
-// ── SEND BY EMAIL (via Cloudflare Worker) ────────────────────────────────────
+// ── SEND BY EMAIL (batched via Cloudflare Worker) ───────────────────────────
 async function sendByEmail() {
   var s = sessions[currentSession];
   var naFlags = s.naFlags || {};
@@ -626,78 +626,108 @@ async function sendByEmail() {
   }
 
   try {
-    // Step 1: Compress all photos
-    setStatus('Compressing photos…', 10, 'Please keep this screen open');
-    var photos = [];
+    // Step 1: Collect and compress all photos
+    setStatus('Compressing photos…', 5, 'Please keep this screen open');
+    var allPhotos = [];
     for (var ii=0; ii<PHOTO_ITEMS.length; ii++) {
       var item = PHOTO_ITEMS[ii];
       var itemPhotos = sessionPhotos[item.id] || [];
       for (var jj=0; jj<itemPhotos.length; jj++) {
-        var compressed = await compressImage(itemPhotos[jj], 600, 0.5);
-        var filename = String(photos.length+1).padStart(2,'0')+'_'+item.label.replace(/[^a-z0-9]/gi,'_')+(itemPhotos.length>1?'_'+String(jj+1):'')+'.jpg';
-        photos.push({ filename: filename, data: compressed, label: item.label });
+        var compressed = await compressImage(itemPhotos[jj], 800, 0.6);
+        allPhotos.push({
+          data: compressed,
+          label: item.label,
+          num: jj+1,
+          total: itemPhotos.length
+        });
       }
     }
 
-    if (photos.length === 0) throw new Error('No photos to send');
+    if (allPhotos.length === 0) throw new Error('No photos to send');
 
-    // Build summary
-    var summary = PHOTO_ITEMS.map(function(item) {
-      var count = (sessionPhotos[item.id]||[]).length;
-      return {
-        label: item.label,
-        status: count>0?'done':naFlags[item.id]?'na':'missing',
-        count: count
-      };
-    });
-
-    var payload = JSON.stringify({
-      vessel: s.vessel,
-      installer: s.installer,
-      date: date,
-      photos: photos,
-      summary: summary,
-      notifyEmail: NOTIFY_EMAIL,
-      resendKey: RESEND_API_KEY
-    });
-
-    var payloadKB = Math.round(payload.length / 1024);
-    setStatus('Sending '+photos.length+' photos ('+payloadKB+'KB total)…', 40, 'Uploading to server…');
-
-    // Give UI time to update before the fetch blocks
-    await new Promise(function(r){setTimeout(r,100);});
-
-    var response;
-    try {
-      const controller = new AbortController();
-      const timeout = setTimeout(function(){ controller.abort(); }, 30000);
-      response = await fetch(WORKER_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: payload,
-        signal: controller.signal
-      });
-      clearTimeout(timeout);
-    } catch(fetchErr) {
-      if(fetchErr.name === 'AbortError') throw new Error('Request timed out — payload was '+payloadKB+'KB, try with fewer photos');
-      throw new Error('Network error: '+fetchErr.message+' (payload was '+payloadKB+'KB)');
+    // Step 2: Split into batches of 3 (~200-400KB each, well under 1MB limit)
+    var BATCH_SIZE = 3;
+    var batches = [];
+    for (var b=0; b<allPhotos.length; b+=BATCH_SIZE) {
+      batches.push(allPhotos.slice(b, b+BATCH_SIZE));
     }
 
-    var resultText = await response.text();
-    console.log('Worker response:', response.status, resultText);
-    var result;
-    try { result = JSON.parse(resultText); } catch(e) { throw new Error('Worker error '+response.status+': '+resultText.substring(0,300)); }
-    if (!result.success) throw new Error(result.error || 'Worker returned failure');
+    var totalBatches = batches.length + 1; // +1 for summary
 
-    setStatus('✅ All done!', 100, photos.length+' photos sent to '+NOTIFY_EMAIL);
+    // Step 3: Send each batch
+    for (var b=0; b<batches.length; b++) {
+      var batch = batches[b];
+      var firstNum = b*BATCH_SIZE + 1;
+      var lastNum = Math.min(firstNum + batch.length - 1, allPhotos.length);
+      var pct = 10 + Math.round((b / totalBatches) * 80);
+      setStatus('Sending email '+(b+1)+' of '+totalBatches+'…', pct, 'Photos '+firstNum+' to '+lastNum+' of '+allPhotos.length);
+
+      await new Promise(function(r){setTimeout(r,50);}); // let UI update
+
+      var response = await fetch(WORKER_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'sendBatch',
+          vessel: s.vessel,
+          installer: s.installer,
+          date: date,
+          photos: batch,
+          batchNum: b+1,
+          totalBatches: totalBatches,
+          firstNum: firstNum,
+          lastNum: lastNum,
+          totalPhotos: allPhotos.length,
+          notifyEmail: NOTIFY_EMAIL,
+          resendKey: RESEND_API_KEY
+        })
+      });
+
+      var result = await response.json();
+      if (!result.success) throw new Error('Batch '+(b+1)+' failed: '+result.error);
+
+      // Small pause between emails
+      if (b < batches.length-1) await new Promise(function(r){setTimeout(r,500);});
+    }
+
+    // Step 4: Send summary email
+    var pctSummary = 10 + Math.round((batches.length / totalBatches) * 80);
+    setStatus('Sending summary email…', pctSummary, 'Almost done…');
+
+    var complete = PHOTO_ITEMS.filter(function(i){return (sessionPhotos[i.id]||[]).length>0;});
+    var missing  = PHOTO_ITEMS.filter(function(i){return !(sessionPhotos[i.id]||[]).length&&!naFlags[i.id];});
+    var naItems  = PHOTO_ITEMS.filter(function(i){return naFlags[i.id];});
+
+    var summaryResponse = await fetch(WORKER_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'sendSummary',
+        vessel: s.vessel,
+        installer: s.installer,
+        date: date,
+        totalPhotos: allPhotos.length,
+        totalEmails: batches.length,
+        complete: complete.map(function(i){return {label:i.label, count:(sessionPhotos[i.id]||[]).length};}),
+        missing: missing.map(function(i){return {label:i.label};}),
+        na: naItems.map(function(i){return {label:i.label};}),
+        notifyEmail: NOTIFY_EMAIL,
+        resendKey: RESEND_API_KEY
+      })
+    });
+
+    var summaryResult = await summaryResponse.json();
+    if (!summaryResult.success) throw new Error('Summary email failed: '+summaryResult.error);
+
+    setStatus('✅ All done!', 100, allPhotos.length+' photos sent in '+batches.length+' emails');
     sessions[currentSession].submitted = true;
     saveMeta();
 
     setTimeout(function() {
       ov.style.display = 'none';
       document.getElementById('success-box').style.display = 'block';
-      document.getElementById('success-detail').textContent = photos.length+' photos sent as a zip to '+NOTIFY_EMAIL+'. Please upload full quality photos to Cluster.';
-      showToast('✅ '+photos.length+' photos sent!');
+      document.getElementById('success-detail').textContent = allPhotos.length+' photos sent to '+NOTIFY_EMAIL+' in '+(batches.length+1)+' emails. Please also upload full quality photos to Cluster.';
+      showToast('✅ '+allPhotos.length+' photos sent!');
     }, 1000);
 
   } catch(err) {
