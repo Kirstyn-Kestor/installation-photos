@@ -597,7 +597,8 @@ async function submitToGoogleDrive(){
   }
 
   try{
-    emailjs.init({ publicKey: EMAILJS_KEY });
+    // Init once only
+    try { emailjs.init({ publicKey: EMAILJS_KEY }); } catch(initErr) { console.log('init:', initErr); }
 
     // Collect and compress all photos - very small for email
     setStatus('Compressing photos…', 5, 'Please keep this screen open');
@@ -655,13 +656,19 @@ async function submitToGoogleDrive(){
 '+
         'Photo '+firstNum+' of '+allPhotos.length+': '+caption;
 
-      await emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, {
-        subject,
-        message,
-        name:'EcoPro Installer App',
-        email:'hydrogenecopro@gmail.com',
-        photo: ph.data
-      });
+      try {
+        const result = await emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, {
+          subject,
+          message,
+          name:'EcoPro Installer App',
+          email:'hydrogenecopro@gmail.com',
+          photo: ph.data
+        });
+        console.log('Send result:', result);
+      } catch(sendErr) {
+        console.error('Send error:', sendErr);
+        throw new Error('Email '+(b+1)+' failed: '+(sendErr.text||sendErr.message||JSON.stringify(sendErr)));
+      }
 
       if(b < batches.length-1) await new Promise(r=>setTimeout(r, 800));
     }
@@ -711,7 +718,11 @@ async function submitToGoogleDrive(){
 
   }catch(err){
     console.error('EmailJS error:', err);
-    const errMsg = err.text||err.message||(typeof err==='object'?JSON.stringify(err):String(err));
+    let errMsg = '';
+    if(err && err.text) errMsg = err.text;
+    else if(err && err.message) errMsg = err.message;
+    else if(err && err.status) errMsg = 'Status '+err.status+': '+JSON.stringify(err);
+    else errMsg = JSON.stringify(err)||String(err);
     setStatus('⚠️ '+errMsg, 0);
     document.getElementById('upload-title').textContent='Send failed — please try again';
     
