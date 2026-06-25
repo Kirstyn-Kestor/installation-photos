@@ -641,7 +641,8 @@ async function sendByEmail() {
 
     if (photos.length === 0) throw new Error('No photos to send');
 
-    setStatus('Sending '+photos.length+' photos…', 40, 'Uploading to server…');
+    var payloadSize = Math.round(JSON.stringify({vessel:s.vessel,installer:s.installer,date:date,photos:photos,summary:[],notifyEmail:NOTIFY_EMAIL,resendKey:RESEND_API_KEY}).length / 1024);
+    setStatus('Sending '+photos.length+' photos ('+payloadSize+'KB)…', 40, 'Uploading to server…');
 
     // Build summary
     var summary = PHOTO_ITEMS.map(function(item) {
@@ -668,7 +669,10 @@ async function sendByEmail() {
       })
     });
 
-    var result = await response.json();
+    var resultText = await response.text();
+    console.log('Worker response:', response.status, resultText);
+    var result;
+    try { result = JSON.parse(resultText); } catch(e) { throw new Error('Worker error '+response.status+': '+resultText.substring(0,200)); }
     if (!result.success) throw new Error(result.error || 'Worker returned failure');
 
     setStatus('✅ All done!', 100, photos.length+' photos sent to '+NOTIFY_EMAIL);
