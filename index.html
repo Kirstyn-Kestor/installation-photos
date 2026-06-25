@@ -485,7 +485,7 @@ async function handlePhoto(id, input) {
   var reader = new FileReader();
   reader.onload = async function(e) {
     try {
-      var compressed = await compressImage(e.target.result, 800, 0.5);
+      var compressed = await compressImage(e.target.result, 1600, 0.8);
       var photos = sessionPhotos[id] || [];
       await savePhotoDB(currentSession, id, photos.length, compressed);
       photos.push(compressed);
@@ -652,7 +652,7 @@ async function saveContactSheet() {
     });
 
     var COLS = 3;
-    var THUMB = 110;
+    var THUMB = 150;
     var LABEL_H = 28;
     var PAD = 8;
     var ROWS = Math.ceil(allPhotos.length / COLS);
