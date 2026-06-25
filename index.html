@@ -4,8 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>EcoPro Installation Photos v7</title>
-<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<title>EcoPro Installation Photos</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -114,13 +113,11 @@ header{background:var(--navy);padding:16px 20px 14px;position:sticky;top:0;z-ind
 .review-actions{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
 .btn-action{flex:1;min-width:130px;padding:13px 10px;border-radius:var(--radius);font-size:14px;font-weight:700;cursor:pointer;text-align:center;border:none}
 .btn-go-back{background:var(--navy);color:var(--white)}
-.btn-send{background:var(--green);color:var(--white)}
 .btn-whatsapp{background:#25D366;color:var(--white)}
 .btn-clear{background:var(--red-light);color:var(--red);border:1.5px solid var(--red) !important}
-.success-box{background:var(--green-light);border:1px solid var(--green);border-radius:8px;padding:20px;text-align:center;margin-bottom:12px;display:none}
-.success-box .tick{font-size:40px;margin-bottom:8px}
-.success-box h3{font-weight:700;color:var(--green);font-size:17px;margin-bottom:4px}
-.success-box p{font-size:13px;color:var(--text-soft)}
+.cluster-reminder{background:var(--amber-light);border:1px solid var(--amber);border-radius:8px;padding:16px;margin-top:16px;text-align:center;display:none}
+.cluster-reminder h3{font-size:15px;font-weight:700;color:var(--amber);margin-bottom:6px}
+.cluster-reminder p{font-size:13px;color:var(--text-soft);line-height:1.5}
 .spinner{width:60px;height:60px;border:6px solid rgba(255,255,255,0.2);border-top-color:#7ec8f0;border-radius:50%;animation:spin 0.7s linear infinite;margin:0 auto 24px}
 @keyframes spin{to{transform:rotate(360deg)}}
 .upload-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:#1a2e4a;z-index:99999;display:none;flex-direction:column;align-items:center;justify-content:center;padding:30px;text-align:center}
@@ -172,7 +169,6 @@ header{background:var(--navy);padding:16px 20px 14px;position:sticky;top:0;z-ind
         <input type="text" id="installer-input" placeholder="e.g. John Smith" autocomplete="off">
       </div>
       <button class="btn-primary" id="start-btn">Start Photo Checklist →</button>
-      <button id="test-btn" style="width:100%;padding:10px;margin-top:8px;background:none;border:1.5px solid var(--border);border-radius:var(--radius);font-size:13px;color:var(--text-soft);cursor:pointer">🧪 Test email connection</button>
     </div>
     <div class="saved-sessions" id="saved-sessions-wrap" style="display:none">
       <h3>Continue a previous job</h3>
@@ -211,25 +207,25 @@ header{background:var(--navy);padding:16px 20px 14px;position:sticky;top:0;z-ind
     </div>
   </div>
   <div id="review-list"></div>
-  <div class="success-box" id="success-box">
-    <div class="tick">✅</div>
-    <h3>Photos sent!</h3>
-    <p id="success-detail"></p>
+
+  <div class="cluster-reminder" id="cluster-reminder">
+    <h3>📱 Upload to Cluster</h3>
+    <p>Your checklist is complete. Please now upload the full quality photos from your phone camera roll to <strong>Cluster</strong> so the office can access them.</p>
   </div>
-  <div class="review-actions" id="review-actions-main">
+
+  <div class="review-actions">
     <button class="btn-action btn-go-back" id="fill-gaps-btn">← Fill gaps</button>
-    <button class="btn-action btn-send" id="send-btn">📧 Send Photos by Email</button>
+    <button class="btn-action btn-whatsapp" id="whatsapp-btn">📲 Share on WhatsApp</button>
   </div>
   <div class="review-actions" style="margin-top:0">
-    <button class="btn-action btn-whatsapp" id="whatsapp-btn">📲 Share on WhatsApp</button>
     <button class="btn-action btn-clear" id="clear-btn">🗑 Clear job</button>
   </div>
 </div>
 
-<div class="upload-overlay" id="upload-overlay">
+<div class="upload-overlay" id="upload-overlay" style="display:none">
   <div class="spinner"></div>
-  <h3 id="upload-title">Sending photos…</h3>
-  <div class="status-text" id="upload-status">Preparing…</div>
+  <h3 id="upload-title">Processing…</h3>
+  <div class="status-text" id="upload-status">Please wait…</div>
   <div class="overlay-bar-wrap"><div class="overlay-bar" id="upload-bar"></div></div>
   <div class="overlay-count" id="upload-count"></div>
 </div>
@@ -248,10 +244,6 @@ header{background:var(--navy);padding:16px 20px 14px;position:sticky;top:0;z-ind
 <div class="toast" id="toast"></div>
 
 <script>
-var WORKER_URL     = 'https://ecopro-mailer.icy-math-5ead.workers.dev/';
-var RESEND_API_KEY = 're_YzSGNKE7_AiR2nfHrHHKfsXJuS9WidSd2';
-var NOTIFY_EMAIL   = 'info@ecomotus.com';
-
 var PHOTO_ITEMS = [
   {id:1,  label:'Engine location in Engine Room', note:'May require multiple photos'},
   {id:2,  label:'Engine', note:null},
@@ -275,15 +267,12 @@ var PHOTO_ITEMS = [
 
 var db, currentSession=null, sessions={}, currentFilter='all', sessionPhotos={};
 
-// ── INDEXEDDB ────────────────────────────────────────────────────────────────
 function openDB() {
   return new Promise(function(resolve, reject) {
     var req = indexedDB.open('ecoproPhotos', 1);
     req.onupgradeneeded = function(e) {
       var d = e.target.result;
-      if (!d.objectStoreNames.contains('photos')) {
-        d.createObjectStore('photos', {keyPath:'photoKey'});
-      }
+      if (!d.objectStoreNames.contains('photos')) d.createObjectStore('photos', {keyPath:'photoKey'});
     };
     req.onsuccess = function(e) { db = e.target.result; resolve(db); };
     req.onerror = function(e) { reject(e); };
@@ -339,10 +328,10 @@ async function reindexPhotosDB(sessionKey, itemId, photos) {
   for (var i=0; i<photos.length; i++) await savePhotoDB(sessionKey, itemId, i, photos[i]);
 }
 
-// ── META ─────────────────────────────────────────────────────────────────────
 function loadMeta() { try { var r=localStorage.getItem('ecoproMeta'); if(r) sessions=JSON.parse(r); } catch(e) { sessions={}; } }
 function saveMeta() { try { localStorage.setItem('ecoproMeta', JSON.stringify(sessions)); } catch(e) {} }
 function getKey(v,i) { return (v+'_'+i).replace(/[^a-z0-9]/gi,'_').toLowerCase(); }
+
 function initSession(vessel, installer) {
   var key = getKey(vessel, installer);
   if (!sessions[key]) {
@@ -352,7 +341,6 @@ function initSession(vessel, installer) {
   return key;
 }
 
-// ── SETUP ────────────────────────────────────────────────────────────────────
 function renderSetup() {
   loadMeta();
   var keys = Object.keys(sessions);
@@ -362,17 +350,13 @@ function renderSetup() {
   document.getElementById('saved-sessions-list').innerHTML = keys.map(function(key) {
     var s = sessions[key];
     var date = new Date(s.updated).toLocaleDateString('en-GB',{day:'numeric',month:'short'});
-    var badge = s.submitted ? ' <span style="color:var(--green);font-weight:700">✓ Sent</span>' : '';
+    var badge = s.submitted ? ' <span style="color:var(--green);font-weight:700">✓ Done</span>' : '';
     return '<div class="session-item" data-key="'+key+'">' +
-      '<div class="session-info">' +
-        '<div class="session-name">'+s.vessel+badge+'</div>' +
-        '<div class="session-meta">'+s.installer+' · '+date+'</div>' +
-      '</div>' +
+      '<div class="session-info"><div class="session-name">'+s.vessel+badge+'</div><div class="session-meta">'+s.installer+' · '+date+'</div></div>' +
       '<div class="session-arrow">›</div>' +
       '<button class="session-delete" data-del="'+key+'">✕</button>' +
     '</div>';
   }).join('');
-
   document.querySelectorAll('.session-item').forEach(function(el) {
     el.addEventListener('click', function() { loadChecklist(el.dataset.key); });
   });
@@ -382,8 +366,7 @@ function renderSetup() {
 }
 
 function goToSetup() {
-  var ov = document.getElementById('upload-overlay');
-  ov.style.display = 'none';
+  document.getElementById('upload-overlay').style.display='none';
   currentSession = null; sessionPhotos = {};
   document.getElementById('main-screen').style.display='none';
   document.getElementById('review-screen').style.display='none';
@@ -396,7 +379,6 @@ function goToSetup() {
   renderSetup();
 }
 
-// ── CHECKLIST ────────────────────────────────────────────────────────────────
 async function loadChecklist(key) {
   currentSession = key;
   showToast('Loading…');
@@ -438,7 +420,7 @@ function renderChecklist() {
         '<div class="item-chevron">›</div>' +
       '</div>' +
       '<div class="item-body">' +
-        (photos.length>0 ? '<div class="thumb-grid">'+thumbs+'</div>' : '') +
+        (photos.length>0?'<div class="thumb-grid">'+thumbs+'</div>':'') +
         '<div class="item-actions">' +
           '<button class="btn-photo" data-photo="'+item.id+'">📷 '+(isDone?'Add another':'Take photo')+'</button>' +
           '<button class="btn-na'+(isNA?' active':'')+'" data-na="'+item.id+'">'+(isNA?'✓ Marked N/A':'Mark as N/A')+'</button>' +
@@ -450,9 +432,8 @@ function renderChecklist() {
     '</div>';
   }).join('');
 
-  // Bind events
   document.querySelectorAll('[data-toggle]').forEach(function(el) {
-    el.addEventListener('click', function() { toggleItem(el.dataset.toggle); });
+    el.addEventListener('click', function() { document.getElementById('item-'+el.dataset.toggle).classList.toggle('expanded'); });
   });
   document.querySelectorAll('[data-photo]').forEach(function(btn) {
     btn.addEventListener('click', function() { document.getElementById('input-'+btn.dataset.photo).click(); });
@@ -470,8 +451,6 @@ function renderChecklist() {
   updateProgress();
   applyFilter(currentFilter);
 }
-
-function toggleItem(id) { document.getElementById('item-'+id).classList.toggle('expanded'); }
 
 function compressImage(dataUrl, maxWidth, quality) {
   return new Promise(function(resolve) {
@@ -491,14 +470,13 @@ function compressImage(dataUrl, maxWidth, quality) {
 async function handlePhoto(id, input) {
   if (!input.files || !input.files[0]) return;
   var ind = document.getElementById('saving-'+id);
-  if (ind) { ind.textContent = '⏳ Saving…'; }
+  if (ind) ind.textContent = '⏳ Saving…';
   var reader = new FileReader();
   reader.onload = async function(e) {
     try {
       var compressed = await compressImage(e.target.result, 800, 0.5);
       var photos = sessionPhotos[id] || [];
-      var newIndex = photos.length;
-      await savePhotoDB(currentSession, id, newIndex, compressed);
+      await savePhotoDB(currentSession, id, photos.length, compressed);
       photos.push(compressed);
       sessionPhotos[id] = photos;
       sessions[currentSession].updated = new Date().toISOString();
@@ -573,13 +551,11 @@ function applyFilter(filter) {
     var el = document.getElementById('item-'+item.id);
     if (!el) return;
     var isDone = (sessionPhotos[item.id]||[]).length>0||naFlags[item.id];
-    var show = filter==='done'?isDone:filter==='outstanding'?!isDone:true;
-    el.style.display = show?'block':'none';
+    el.style.display = (filter==='done'?isDone:filter==='outstanding'?!isDone:true)?'block':'none';
   });
   updateProgress();
 }
 
-// ── REVIEW ───────────────────────────────────────────────────────────────────
 function goToReview() {
   var s = sessions[currentSession];
   var naFlags = s.naFlags || {};
@@ -592,8 +568,7 @@ function goToReview() {
   document.getElementById('stat-done').textContent = donePh;
   document.getElementById('stat-missing').textContent = PHOTO_ITEMS.length-donePh-na;
   document.getElementById('stat-na').textContent = na;
-  document.getElementById('success-box').style.display='none';
-  document.getElementById('review-actions-main').style.display='flex';
+  document.getElementById('cluster-reminder').style.display='block';
   document.getElementById('review-list').innerHTML = PHOTO_ITEMS.map(function(item) {
     var photos = sessionPhotos[item.id]||[];
     var hasPh = photos.length>0;
@@ -610,141 +585,6 @@ function goToReview() {
   window.scrollTo(0,0);
 }
 
-// ── SEND BY EMAIL (batched via Cloudflare Worker) ───────────────────────────
-async function sendByEmail() {
-  var s = sessions[currentSession];
-  var naFlags = s.naFlags || {};
-  var date = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
-
-  var ov = document.getElementById('upload-overlay');
-  ov.style.display = 'flex';
-  document.getElementById('review-actions-main').style.display='none';
-
-  function setStatus(text, pct, count) {
-    document.getElementById('upload-status').textContent = text;
-    document.getElementById('upload-bar').style.width = pct+'%';
-    document.getElementById('upload-count').textContent = count||'';
-  }
-
-  try {
-    // Step 1: Collect and compress all photos
-    setStatus('Compressing photos…', 5, 'Please keep this screen open');
-    var allPhotos = [];
-    for (var ii=0; ii<PHOTO_ITEMS.length; ii++) {
-      var item = PHOTO_ITEMS[ii];
-      var itemPhotos = sessionPhotos[item.id] || [];
-      for (var jj=0; jj<itemPhotos.length; jj++) {
-        var compressed = await compressImage(itemPhotos[jj], 800, 0.6);
-        allPhotos.push({
-          data: compressed,
-          label: item.label,
-          num: jj+1,
-          total: itemPhotos.length
-        });
-      }
-    }
-
-    if (allPhotos.length === 0) throw new Error('No photos to send');
-
-    // Step 2: Split into batches of 3 (~200-400KB each, well under 1MB limit)
-    var BATCH_SIZE = 3;
-    var batches = [];
-    for (var b=0; b<allPhotos.length; b+=BATCH_SIZE) {
-      batches.push(allPhotos.slice(b, b+BATCH_SIZE));
-    }
-
-    var totalBatches = batches.length + 1; // +1 for summary
-
-    // Step 3: Send each batch
-    for (var b=0; b<batches.length; b++) {
-      var batch = batches[b];
-      var firstNum = b*BATCH_SIZE + 1;
-      var lastNum = Math.min(firstNum + batch.length - 1, allPhotos.length);
-      var pct = 10 + Math.round((b / totalBatches) * 80);
-      setStatus('Sending email '+(b+1)+' of '+totalBatches+'…', pct, 'Photos '+firstNum+' to '+lastNum+' of '+allPhotos.length);
-
-      await new Promise(function(r){setTimeout(r,50);}); // let UI update
-
-      var response = await fetch(WORKER_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'sendBatch',
-          vessel: s.vessel,
-          installer: s.installer,
-          date: date,
-          photos: batch,
-          batchNum: b+1,
-          totalBatches: totalBatches,
-          firstNum: firstNum,
-          lastNum: lastNum,
-          totalPhotos: allPhotos.length,
-          notifyEmail: NOTIFY_EMAIL,
-          resendKey: RESEND_API_KEY
-        })
-      });
-
-      var result = await response.json();
-      if (!result.success) throw new Error('Batch '+(b+1)+' failed: '+result.error);
-
-      // Small pause between emails
-      if (b < batches.length-1) await new Promise(function(r){setTimeout(r,500);});
-    }
-
-    // Step 4: Send summary email
-    var pctSummary = 10 + Math.round((batches.length / totalBatches) * 80);
-    setStatus('Sending summary email…', pctSummary, 'Almost done…');
-
-    var complete = PHOTO_ITEMS.filter(function(i){return (sessionPhotos[i.id]||[]).length>0;});
-    var missing  = PHOTO_ITEMS.filter(function(i){return !(sessionPhotos[i.id]||[]).length&&!naFlags[i.id];});
-    var naItems  = PHOTO_ITEMS.filter(function(i){return naFlags[i.id];});
-
-    var summaryResponse = await fetch(WORKER_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'sendSummary',
-        vessel: s.vessel,
-        installer: s.installer,
-        date: date,
-        totalPhotos: allPhotos.length,
-        totalEmails: batches.length,
-        complete: complete.map(function(i){return {label:i.label, count:(sessionPhotos[i.id]||[]).length};}),
-        missing: missing.map(function(i){return {label:i.label};}),
-        na: naItems.map(function(i){return {label:i.label};}),
-        notifyEmail: NOTIFY_EMAIL,
-        resendKey: RESEND_API_KEY
-      })
-    });
-
-    var summaryResult = await summaryResponse.json();
-    if (!summaryResult.success) throw new Error('Summary email failed: '+summaryResult.error);
-
-    setStatus('✅ All done!', 100, allPhotos.length+' photos sent in '+batches.length+' emails');
-    sessions[currentSession].submitted = true;
-    saveMeta();
-
-    setTimeout(function() {
-      ov.style.display = 'none';
-      document.getElementById('success-box').style.display = 'block';
-      document.getElementById('success-detail').textContent = allPhotos.length+' photos sent to '+NOTIFY_EMAIL+' in '+(batches.length+1)+' emails. Please also upload full quality photos to Cluster.';
-      showToast('✅ '+allPhotos.length+' photos sent!');
-    }, 1000);
-
-  } catch(err) {
-    console.error('Send error:', err);
-    var msg = err.message || JSON.stringify(err);
-    setStatus('⚠️ Failed: '+msg, 0, 'Tap Fill gaps to go back and try again');
-    setTimeout(function() {
-      ov.style.display = 'none';
-      document.getElementById('review-actions-main').style.display='flex';
-    }, 4000);
-    showToast('Failed: '+msg.substring(0,60));
-  }
-}
-
-
-// ── WHATSAPP ─────────────────────────────────────────────────────────────────
 function shareWhatsApp() {
   var s = sessions[currentSession];
   var naFlags = s.naFlags || {};
@@ -753,14 +593,16 @@ function shareWhatsApp() {
   var missing = PHOTO_ITEMS.filter(function(i){return !(sessionPhotos[i.id]||[]).length&&!naFlags[i.id];});
   var date = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
   var msg = '📸 *EcoPro Installation Photos*\n🚢 '+s.vessel+'\n👤 '+s.installer+'\n📅 '+date+'\n\n';
-  msg += '✅ Complete: '+done+'/18\n';
+  msg += '✅ Complete: '+done+'/'+PHOTO_ITEMS.length+'\n';
   if (na>0) msg += '➖ N/A: '+na+'\n';
   if (missing.length>0) { msg += '⚠️ Missing ('+missing.length+'):\n'; missing.forEach(function(i){msg+='  • '+i.label+'\n';}); }
   else msg += '🎉 All items complete!\n';
+  msg += '\n📱 Photos being uploaded to Cluster.';
+  sessions[currentSession].submitted = true;
+  saveMeta();
   window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
 }
 
-// ── MODAL ────────────────────────────────────────────────────────────────────
 function showModal(title, body, onConfirm) {
   document.getElementById('modal-title').textContent = title;
   document.getElementById('modal-body').textContent = body;
@@ -777,6 +619,7 @@ async function confirmClear() {
     saveMeta(); closeModal(); goToSetup(); showToast('Job cleared');
   });
 }
+
 async function confirmDeleteSession(key) {
   var s = sessions[key];
   showModal('Delete "'+s.vessel+'"?', 'This will permanently delete all saved photos for this job.', async function() {
@@ -786,7 +629,6 @@ async function confirmDeleteSession(key) {
   });
 }
 
-// ── TOAST ────────────────────────────────────────────────────────────────────
 var toastTimer;
 function showToast(msg) {
   var t = document.getElementById('toast');
@@ -795,41 +637,6 @@ function showToast(msg) {
   toastTimer = setTimeout(function(){t.classList.remove('show');}, 2500);
 }
 
-// ── TEST EMAIL ───────────────────────────────────────────────────────────────
-async function testEmail() {
-  showToast('Sending test email…');
-  try {
-    var response = await fetch(WORKER_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'sendSummary',
-        vessel: 'TEST',
-        installer: 'TEST',
-        date: 'Test',
-        totalPhotos: 1,
-        totalEmails: 1,
-        complete: [{label:'Test item', count:1}],
-        missing: [],
-        na: [],
-        notifyEmail: 'info@ecomotus.com',
-        resendKey: RESEND_API_KEY
-      })
-    });
-    var result = await response.json();
-    if (result.success) {
-      showToast('✅ Test email sent! Check info@ecomotus.com');
-    } else {
-      showToast('❌ Failed: ' + (result.error||'unknown').substring(0,60));
-      alert('Error: ' + result.error);
-    }
-  } catch(err) {
-    showToast('❌ ' + err.message);
-    alert('Network error: ' + err.message);
-  }
-}
-
-// ── WIRE UP BUTTONS ──────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('start-btn').addEventListener('click', function() {
     var vessel = document.getElementById('vessel-input').value.trim();
@@ -838,7 +645,6 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!installer) { showToast('Please enter your name'); return; }
     loadChecklist(initSession(vessel, installer));
   });
-
   document.getElementById('review-btn').addEventListener('click', goToReview);
   document.getElementById('back-btn').addEventListener('click', goToSetup);
   document.getElementById('fill-gaps-btn').addEventListener('click', function() {
@@ -846,25 +652,15 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('main-screen').style.display='block';
     setFilter('outstanding');
   });
-  document.getElementById('send-btn').addEventListener('click', sendByEmail);
   document.getElementById('whatsapp-btn').addEventListener('click', shareWhatsApp);
   document.getElementById('clear-btn').addEventListener('click', confirmClear);
   document.getElementById('modal-cancel').addEventListener('click', closeModal);
-  document.getElementById('test-btn').addEventListener('click', testEmail);
-
   document.getElementById('tab-all').addEventListener('click', function(){setFilter('all');});
   document.getElementById('tab-outstanding').addEventListener('click', function(){setFilter('outstanding');});
   document.getElementById('tab-done').addEventListener('click', function(){setFilter('done');});
 });
 
-// ── INIT ─────────────────────────────────────────────────────────────────────
-openDB().then(function() {
-  loadMeta();
-  renderSetup();
-}).catch(function() {
-  loadMeta();
-  renderSetup();
-});
+openDB().then(function() { loadMeta(); renderSetup(); }).catch(function() { loadMeta(); renderSetup(); });
 </script>
 </body>
 </html>
