@@ -172,6 +172,7 @@ header{background:var(--navy);padding:16px 20px 14px;position:sticky;top:0;z-ind
         <input type="text" id="installer-input" placeholder="e.g. John Smith" autocomplete="off">
       </div>
       <button class="btn-primary" id="start-btn">Start Photo Checklist →</button>
+      <button id="test-btn" style="width:100%;padding:10px;margin-top:8px;background:none;border:1.5px solid var(--border);border-radius:var(--radius);font-size:13px;color:var(--text-soft);cursor:pointer">🧪 Test email connection</button>
     </div>
     <div class="saved-sessions" id="saved-sessions-wrap" style="display:none">
       <h3>Continue a previous job</h3>
@@ -794,6 +795,39 @@ function showToast(msg) {
   toastTimer = setTimeout(function(){t.classList.remove('show');}, 2500);
 }
 
+// ── TEST EMAIL ───────────────────────────────────────────────────────────────
+async function testEmail() {
+  showToast('Sending test email…');
+  try {
+    var response = await fetch(WORKER_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        vessel: 'TEST',
+        installer: 'TEST',
+        date: 'Test',
+        totalPhotos: 0,
+        totalEmails: 0,
+        complete: [{label:'Test item', count:1}],
+        missing: [],
+        na: [],
+        notifyEmail: NOTIFY_EMAIL,
+        resendKey: RESEND_API_KEY
+      })
+    });
+    var result = await response.json();
+    if (result.success) {
+      showToast('✅ Test email sent! Check kirstyn.kestor@gmail.com');
+    } else {
+      showToast('❌ Failed: ' + (result.error||'unknown').substring(0,60));
+      alert('Error: ' + result.error);
+    }
+  } catch(err) {
+    showToast('❌ ' + err.message);
+    alert('Network error: ' + err.message);
+  }
+}
+
 // ── WIRE UP BUTTONS ──────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('start-btn').addEventListener('click', function() {
@@ -815,6 +849,7 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('whatsapp-btn').addEventListener('click', shareWhatsApp);
   document.getElementById('clear-btn').addEventListener('click', confirmClear);
   document.getElementById('modal-cancel').addEventListener('click', closeModal);
+  document.getElementById('test-btn').addEventListener('click', testEmail);
 
   document.getElementById('tab-all').addEventListener('click', function(){setFilter('all');});
   document.getElementById('tab-outstanding').addEventListener('click', function(){setFilter('outstanding');});
