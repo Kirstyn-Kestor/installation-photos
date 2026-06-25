@@ -144,7 +144,6 @@ header{background:var(--navy);padding:16px 20px 14px;position:sticky;top:0;z-ind
 .btn-modal-confirm{background:var(--red);color:var(--white)}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 </head>
 <body>
 
@@ -221,7 +220,7 @@ header{background:var(--navy);padding:16px 20px 14px;position:sticky;top:0;z-ind
   </div>
 
   <div class="review-actions">
-    <button class="btn-action" id="email-btn" style="background:var(--blue);color:white">📧 Email screenshot</button>
+    <button class="btn-action" id="share-sheet-btn" style="background:var(--blue);color:white">📋 Save &amp; Share contact sheet</button>
     <button class="btn-action btn-go-back" id="fill-gaps-btn">← Fill gaps</button>
     <button class="btn-action btn-whatsapp" id="whatsapp-btn">📲 Share on WhatsApp</button>
   </div>
@@ -257,11 +256,6 @@ header{background:var(--navy);padding:16px 20px 14px;position:sticky;top:0;z-ind
 <div class="toast" id="toast"></div>
 
 <script>
-var EMAILJS_SERVICE  = 'service_xuaj2ik';
-var EMAILJS_TEMPLATE = 'template_hv1cr7h';
-var EMAILJS_KEY      = '2_uY_bTfLmNNdRRXM';
-var NOTIFY_EMAIL     = 'info@ecomotus.com';
-
 var PHOTO_ITEMS = [
   {id:1,  label:'Engine location in Engine Room', note:'May require multiple photos'},
   {id:2,  label:'Engine', note:null},
@@ -618,7 +612,7 @@ function shareWhatsApp() {
   msg += '\n📱 Photos being uploaded to Cluster.';
   sessions[currentSession].submitted = true;
   saveMeta();
-  window.open('https://wa.me/447598771212?text='+encodeURIComponent(msg),'_blank');
+  window.open('https://chat.whatsapp.com/Cvej0m20riN8a1soG3XCY6?text='+encodeURIComponent(msg),'_blank');
 }
 
 function showModal(title, body, onConfirm) {
@@ -655,41 +649,34 @@ function showToast(msg) {
   toastTimer = setTimeout(function(){t.classList.remove('show');}, 2500);
 }
 
-async function sendScreenshot() {
+async function saveContactSheet() {
   var s = sessions[currentSession];
+  var naFlags = s.naFlags || {};
   var date = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
   var ov = document.getElementById('screenshot-overlay');
   var title = document.getElementById('screenshot-title');
   var status = document.getElementById('screenshot-status');
 
   ov.classList.add('show');
-  title.textContent = 'Capturing screenshot…';
+  title.textContent = 'Building contact sheet…';
   status.textContent = 'Please wait';
 
   try {
-    emailjs.init({publicKey: EMAILJS_KEY});
-
-    // Build a simple contact sheet image on canvas directly - no html2canvas size issues
-    title.textContent = 'Building contact sheet…';
-
-    var s2 = sessions[currentSession];
-    var naFlags2 = s2.naFlags || {};
     var allPhotos = [];
     PHOTO_ITEMS.forEach(function(item) {
       var photos = sessionPhotos[item.id] || [];
-      if (photos.length > 0) allPhotos.push({label: item.label, src: photos[0]});
-      else if (naFlags2[item.id]) allPhotos.push({label: item.label, src: null, na: true});
-      else allPhotos.push({label: item.label, src: null, missing: true});
+      if (photos.length > 0) allPhotos.push({label:item.label, src:photos[0]});
+      else if (naFlags[item.id]) allPhotos.push({label:item.label, src:null, na:true});
+      else allPhotos.push({label:item.label, src:null, missing:true});
     });
 
-    // Build contact sheet: 3 columns, thumbnails with labels
     var COLS = 3;
-    var THUMB = 100;
-    var LABEL_H = 24;
-    var PAD = 6;
+    var THUMB = 110;
+    var LABEL_H = 28;
+    var PAD = 8;
     var ROWS = Math.ceil(allPhotos.length / COLS);
     var W = (THUMB + PAD) * COLS + PAD;
-    var H = 60 + (THUMB + LABEL_H + PAD) * ROWS + PAD;
+    var H = 70 + (THUMB + LABEL_H + PAD) * ROWS + PAD;
 
     var canvas = document.createElement('canvas');
     canvas.width = W;
@@ -702,33 +689,47 @@ async function sendScreenshot() {
 
     // Header
     ctx.fillStyle = '#1a2e4a';
-    ctx.fillRect(0, 0, W, 50);
+    ctx.fillRect(0, 0, W, 60);
     ctx.fillStyle = 'white';
-    ctx.font = 'bold 14px Arial';
-    ctx.fillText('EcoPro: ' + s2.vessel + ' — ' + s2.installer, 8, 20);
-    ctx.font = '11px Arial';
-    ctx.fillText(date, 8, 38);
+    ctx.font = 'bold 15px Arial';
+    ctx.fillText('EcoPro: ' + s.vessel, 10, 22);
+    ctx.font = '12px Arial';
+    ctx.fillText(s.installer + ' — ' + date, 10, 42);
 
-    // Draw each photo
+    // Stats
+    var done = PHOTO_ITEMS.filter(function(i){return (sessionPhotos[i.id]||[]).length>0;}).length;
+    var missing = PHOTO_ITEMS.filter(function(i){return !(sessionPhotos[i.id]||[]).length&&!naFlags[i.id];}).length;
+    ctx.fillStyle = missing > 0 ? '#e8f2fb' : '#e6f5ee';
+    ctx.font = 'bold 11px Arial';
+    ctx.fillStyle = 'rgba(255,255,255,0.7)';
+    ctx.fillText(done + '/' + PHOTO_ITEMS.length + ' complete' + (missing > 0 ? ' · ' + missing + ' missing' : ' ✓'), 10, 56);
+
+    // Draw thumbnails
     var loadPromises = allPhotos.map(function(ph, idx) {
       return new Promise(function(resolve) {
         var col = idx % COLS;
         var row = Math.floor(idx / COLS);
         var x = PAD + col * (THUMB + PAD);
-        var y = 60 + row * (THUMB + LABEL_H + PAD);
+        var y = 70 + row * (THUMB + LABEL_H + PAD);
 
-        // Label background
+        // Label bar
         ctx.fillStyle = ph.missing ? '#fdecea' : ph.na ? '#e6f5ee' : '#e8f2fb';
         ctx.fillRect(x, y + THUMB, THUMB, LABEL_H);
         ctx.fillStyle = ph.missing ? '#c0392b' : ph.na ? '#2a7a4b' : '#1a2e4a';
         ctx.font = '9px Arial';
-        var label = ph.label.length > 18 ? ph.label.substring(0, 17) + '…' : ph.label;
-        ctx.fillText(label, x + 2, y + THUMB + 15);
+        var label = ph.label.length > 20 ? ph.label.substring(0, 19) + '…' : ph.label;
+        ctx.fillText(label, x + 3, y + THUMB + 11);
+        ctx.font = 'bold 9px Arial';
+        ctx.fillText(ph.missing ? '⚠ Missing' : ph.na ? '✓ N/A' : '✓', x + 3, y + THUMB + 22);
 
         if (ph.src) {
           var img = new Image();
           img.onload = function() {
-            ctx.drawImage(img, x, y, THUMB, THUMB);
+            // Draw image cropped to square
+            var iw = img.width, ih = img.height;
+            var size = Math.min(iw, ih);
+            var sx = (iw - size) / 2, sy = (ih - size) / 2;
+            ctx.drawImage(img, sx, sy, size, size, x, y, THUMB, THUMB);
             resolve();
           };
           img.onerror = function() {
@@ -741,8 +742,10 @@ async function sendScreenshot() {
           ctx.fillStyle = ph.na ? '#e6f5ee' : '#fdecea';
           ctx.fillRect(x, y, THUMB, THUMB);
           ctx.fillStyle = ph.na ? '#2a7a4b' : '#c0392b';
-          ctx.font = 'bold 11px Arial';
-          ctx.fillText(ph.na ? 'N/A' : 'Missing', x + 30, y + 54);
+          ctx.font = 'bold 13px Arial';
+          ctx.textAlign = 'center';
+          ctx.fillText(ph.na ? 'N/A' : '⚠', x + THUMB/2, y + THUMB/2 + 5);
+          ctx.textAlign = 'left';
           resolve();
         }
       });
@@ -750,57 +753,54 @@ async function sendScreenshot() {
 
     await Promise.all(loadPromises);
 
-    title.textContent = 'Compressing…';
-    var imgData = canvas.toDataURL('image/jpeg', 0.6);
-    var sizeKB = Math.round(imgData.length / 1024);
-    // Keep compressing until under 45KB
-    var q = 0.5;
-    while (sizeKB > 45 && q > 0.1) {
-      q -= 0.1;
-      imgData = canvas.toDataURL('image/jpeg', q);
-      sizeKB = Math.round(imgData.length / 1024);
-    }
-    status.textContent = 'Contact sheet: ' + sizeKB + 'KB';
+    title.textContent = 'Ready to share!';
+    status.textContent = 'Opening share options…';
 
-    title.textContent = 'Sending email…';
-    status.textContent = 'Sending to ' + NOTIFY_EMAIL;
+    // Convert to blob and share
+    var imgData = canvas.toDataURL('image/jpeg', 0.85);
 
-    var naFlags = s.naFlags || {};
-    var complete = PHOTO_ITEMS.filter(function(i){return (sessionPhotos[i.id]||[]).length>0;});
-    var missing  = PHOTO_ITEMS.filter(function(i){return !(sessionPhotos[i.id]||[]).length&&!naFlags[i.id];});
-
-    var subject = 'EcoPro Installation — ' + s.vessel + ' — ' + s.installer + ' — ' + date;
-    var message = 'EcoPro Installation Photo Review\n\n' +
-      'Vessel: ' + s.vessel + '\n' +
-      'Installer: ' + s.installer + '\n' +
-      'Date: ' + date + '\n\n' +
-      '✅ Complete: ' + complete.length + '/' + PHOTO_ITEMS.length + '\n' +
-      (missing.length > 0 ? '⚠️ Missing: ' + missing.map(function(i){return i.label;}).join(', ') : '🎉 All items photographed!') + '\n\n' +
-      'Screenshot of review page attached as photo below.';
-
-    await emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, {
-      subject: subject,
-      message: message,
-      name: 'EcoPro Installer App',
-      email: 'hydrogenecopro@gmail.com',
-      photo: imgData
-    });
-
-    title.textContent = '✅ Email sent!';
-    status.textContent = 'Screenshot sent to ' + NOTIFY_EMAIL;
-    setTimeout(function() {
+    // Try native share first (mobile)
+    if (navigator.share && navigator.canShare) {
+      canvas.toBlob(async function(blob) {
+        var file = new File([blob], 'EcoPro-' + s.vessel.replace(/[^a-z0-9]/gi,'-') + '.jpg', {type:'image/jpeg'});
+        if (navigator.canShare({files:[file]})) {
+          ov.classList.remove('show');
+          await navigator.share({
+            files: [file],
+            title: 'EcoPro Installation: ' + s.vessel,
+            text: 'EcoPro installation photos — ' + s.vessel + ' — ' + s.installer + ' — ' + date
+          });
+          sessions[currentSession].submitted = true;
+          saveMeta();
+          showToast('✅ Contact sheet shared!');
+        } else {
+          downloadFallback(imgData, s.vessel);
+        }
+      }, 'image/jpeg', 0.85);
+    } else {
       ov.classList.remove('show');
-      showToast('✅ Screenshot emailed to ' + NOTIFY_EMAIL);
-    }, 2000);
+      downloadFallback(imgData, s.vessel);
+    }
 
   } catch(err) {
     console.error(err);
     title.textContent = '⚠️ Failed';
-    status.textContent = err.text || err.message || 'Unknown error';
+    status.textContent = err.message || 'Unknown error';
     setTimeout(function() { ov.classList.remove('show'); }, 3000);
-    showToast('Failed: ' + (err.text || err.message || 'try again'));
   }
 }
+
+function downloadFallback(imgData, vessel) {
+  // Download as image file
+  var a = document.createElement('a');
+  a.href = imgData;
+  a.download = 'EcoPro-' + vessel.replace(/[^a-z0-9]/gi,'-') + '-contactsheet.jpg';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  showToast('✅ Contact sheet saved — share via WhatsApp');
+}
+
 
 document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('start-btn').addEventListener('click', function() {
@@ -820,7 +820,7 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('whatsapp-btn').addEventListener('click', shareWhatsApp);
   document.getElementById('clear-btn').addEventListener('click', confirmClear);
   document.getElementById('modal-cancel').addEventListener('click', closeModal);
-  document.getElementById('email-btn').addEventListener('click', sendScreenshot);
+  document.getElementById('share-sheet-btn').addEventListener('click', saveContactSheet);
   document.getElementById('tab-all').addEventListener('click', function(){setFilter('all');});
   document.getElementById('tab-outstanding').addEventListener('click', function(){setFilter('outstanding');});
   document.getElementById('tab-done').addEventListener('click', function(){setFilter('done');});
