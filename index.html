@@ -633,7 +633,7 @@ async function sendByEmail() {
       var item = PHOTO_ITEMS[ii];
       var itemPhotos = sessionPhotos[item.id] || [];
       for (var jj=0; jj<itemPhotos.length; jj++) {
-        var compressed = await compressImage(itemPhotos[jj], 1000, 0.7);
+        var compressed = await compressImage(itemPhotos[jj], 600, 0.5);
         var filename = String(photos.length+1).padStart(2,'0')+'_'+item.label.replace(/[^a-z0-9]/gi,'_')+(itemPhotos.length>1?'_'+String(jj+1):'')+'.jpg';
         photos.push({ filename: filename, data: compressed, label: item.label });
       }
@@ -669,12 +669,17 @@ async function sendByEmail() {
 
     var response;
     try {
+      const controller = new AbortController();
+      const timeout = setTimeout(function(){ controller.abort(); }, 30000);
       response = await fetch(WORKER_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: payload
+        body: payload,
+        signal: controller.signal
       });
+      clearTimeout(timeout);
     } catch(fetchErr) {
+      if(fetchErr.name === 'AbortError') throw new Error('Request timed out — payload was '+payloadKB+'KB, try with fewer photos');
       throw new Error('Network error: '+fetchErr.message+' (payload was '+payloadKB+'KB)');
     }
 
