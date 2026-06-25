@@ -376,6 +376,9 @@ function startSession(){
 function resumeSession(key){loadChecklist(key);}
 
 function goToSetup(){
+  // Always hide overlay when going back
+  const ov=document.getElementById('upload-overlay');
+  if(ov){ov.classList.remove('show');ov.style.display='none';}
   currentSession=null; sessionPhotos={};
   document.getElementById('main-screen').style.display='none';
   document.getElementById('review-screen').style.display='none';
@@ -778,6 +781,9 @@ function showToast(msg){
   clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2500);
 }
 
+// Make sure overlay is never stuck on load
+const _ov = document.getElementById('upload-overlay');
+if(_ov){ _ov.classList.remove('show'); _ov.style.display='none'; }
 openDB().then(()=>{loadMeta();renderSetup();}).catch(()=>{loadMeta();renderSetup();});
 </script>
 </body>
