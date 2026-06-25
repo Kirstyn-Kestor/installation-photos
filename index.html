@@ -144,6 +144,7 @@ header{background:var(--navy);padding:16px 20px 14px;position:sticky;top:0;z-ind
 .btn-modal-confirm{background:var(--red);color:var(--white)}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 </head>
 <body>
 
@@ -255,6 +256,11 @@ header{background:var(--navy);padding:16px 20px 14px;position:sticky;top:0;z-ind
 <div class="toast" id="toast"></div>
 
 <script>
+var EMAILJS_SERVICE  = 'service_xuaj2ik';
+var EMAILJS_TEMPLATE = 'template_hv1cr7h';
+var EMAILJS_KEY      = '2_uY_bTfLmNNdRRXM';
+var NOTIFY_EMAIL     = 'info@ecomotus.com';
+
 var PHOTO_ITEMS = [
   {id:1,  label:'Engine location in Engine Room', note:'May require multiple photos'},
   {id:2,  label:'Engine', note:null},
@@ -734,33 +740,62 @@ async function saveContactSheet() {
 
     await Promise.all(loadPromises);
 
-    title.textContent = 'Ready to share!';
-    status.textContent = 'Opening share options…';
+    // Auto-email the contact sheet
+    title.textContent = 'Sending to info@ecomotus.com…';
+    status.textContent = 'Please wait';
 
-    // Convert to blob and share
     var imgData = canvas.toDataURL('image/jpeg', 0.85);
+    var sizeKB = Math.round(imgData.length / 1024);
 
-    // Try native share first (mobile)
+    // Keep compressing until under 45KB
+    var q = 0.85;
+    while (sizeKB > 45 && q > 0.1) {
+      q -= 0.1;
+      imgData = canvas.toDataURL('image/jpeg', q);
+      sizeKB = Math.round(imgData.length / 1024);
+    }
+
+    status.textContent = 'Contact sheet ' + sizeKB + 'KB — sending…';
+
+    emailjs.init({publicKey: EMAILJS_KEY});
+
+    var naFlags2 = s.naFlags || {};
+    var complete2 = PHOTO_ITEMS.filter(function(i){return (sessionPhotos[i.id]||[]).length>0;});
+    var missing2  = PHOTO_ITEMS.filter(function(i){return !(sessionPhotos[i.id]||[]).length&&!naFlags2[i.id];});
+    var na2       = PHOTO_ITEMS.filter(function(i){return naFlags2[i.id];});
+
+    await emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, {
+      subject: 'EcoPro Installation — ' + s.vessel + ' — ' + s.installer + ' — ' + date,
+      message: 'EcoPro Installation Complete\n\nVessel: ' + s.vessel + '\nInstaller: ' + s.installer + '\nDate: ' + date +
+        '\n\nComplete: ' + complete2.length + '/' + PHOTO_ITEMS.length +
+        (missing2.length > 0 ? '\nMissing: ' + missing2.map(function(i){return i.label;}).join(', ') : '\nAll items photographed!') +
+        (na2.length > 0 ? '\nN/A: ' + na2.map(function(i){return i.label;}).join(', ') : '') +
+        '\n\nContact sheet image below.',
+      name: 'EcoPro Installer App',
+      email: 'hydrogenecopro@gmail.com',
+      photo: imgData
+    });
+
+    sessions[currentSession].submitted = true;
+    saveMeta();
+
+    title.textContent = '✅ Sent!';
+    status.textContent = 'Contact sheet emailed to ' + NOTIFY_EMAIL;
+    setTimeout(function() {
+      ov.classList.remove('show');
+      showToast('✅ Contact sheet emailed to ' + NOTIFY_EMAIL);
+    }, 2000);
+
+    // Also offer native share
     if (navigator.share && navigator.canShare) {
       canvas.toBlob(async function(blob) {
         var file = new File([blob], 'EcoPro-' + s.vessel.replace(/[^a-z0-9]/gi,'-') + '.jpg', {type:'image/jpeg'});
         if (navigator.canShare({files:[file]})) {
-          ov.classList.remove('show');
-          await navigator.share({
-            files: [file],
-            title: 'EcoPro Installation: ' + s.vessel,
-            text: 'EcoPro installation photos — ' + s.vessel + ' — ' + s.installer + ' — ' + date
-          });
-          sessions[currentSession].submitted = true;
-          saveMeta();
-          showToast('✅ Contact sheet shared!');
-        } else {
-          downloadFallback(imgData, s.vessel);
+          try {
+            await navigator.share({files:[file], title:'EcoPro: ' + s.vessel});
+          } catch(e) { /* user cancelled share - that's fine */ }
         }
       }, 'image/jpeg', 0.85);
-    } else {
-      ov.classList.remove('show');
-      downloadFallback(imgData, s.vessel);
     }
 
   } catch(err) {
