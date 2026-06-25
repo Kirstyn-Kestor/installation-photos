@@ -118,9 +118,15 @@
   .review-msg.missing { color: var(--red); }
   .review-msg.na { color: var(--amber); }
   .upload-progress { background: var(--white); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow-card); margin-bottom: 16px; text-align: center; display: none; }
-  .spinner { width: 40px; height: 40px; border: 4px solid var(--border); border-top-color: var(--blue); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
+  .spinner { width: 48px; height: 48px; border: 5px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
   @keyframes spin { to { transform: rotate(360deg); } }
-  .success-icon { font-size: 40px; margin-bottom: 8px; }
+  .upload-overlay { position: fixed; inset: 0; background: rgba(26,46,74,0.95); z-index: 500; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 30px; text-align: center; }
+  .upload-overlay.show { display: flex; }
+  .upload-overlay h3 { color: white; font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+  .upload-overlay .status-text { color: rgba(255,255,255,0.8); font-size: 14px; margin-bottom: 20px; min-height: 20px; }
+  .overlay-bar-wrap { width: 100%; max-width: 320px; background: rgba(255,255,255,0.2); border-radius: 4px; height: 8px; overflow: hidden; }
+  .overlay-bar { height: 100%; background: linear-gradient(90deg, var(--blue-light), #7ec8f0); border-radius: 4px; transition: width 0.4s ease; width: 0%; }
+  .overlay-count { color: rgba(255,255,255,0.6); font-size: 13px; margin-top: 12px; }
   .upload-progress h3 { font-size: 16px; font-weight: 700; color: var(--navy); margin-bottom: 10px; }
   .upload-bar-wrap { background: var(--grey-light); border-radius: 4px; height: 8px; overflow: hidden; margin-bottom: 8px; }
   .upload-bar { height: 100%; background: linear-gradient(90deg, var(--blue), var(--green)); border-radius: 4px; transition: width 0.3s ease; width: 0%; }
@@ -213,12 +219,7 @@
     </div>
   </div>
 
-  <div class="upload-progress" id="upload-progress" style="display:none">
-    <div class="spinner" id="upload-spinner"></div>
-    <h3 id="upload-title" style="margin-bottom:10px">Uploading photos…</h3>
-    <div class="upload-bar-wrap"><div class="upload-bar" id="upload-bar"></div></div>
-    <div class="upload-status" id="upload-status" style="margin-top:8px">Preparing…</div>
-  </div>
+
 
   <div id="review-list"></div>
 
@@ -251,6 +252,14 @@
       <button class="btn-modal-confirm" id="modal-confirm-btn">Delete</button>
     </div>
   </div>
+</div>
+
+<div class="upload-overlay" id="upload-overlay">
+  <div class="spinner" id="upload-spinner"></div>
+  <h3 id="upload-title">Sending photos…</h3>
+  <div class="status-text" id="upload-status">Preparing…</div>
+  <div class="overlay-bar-wrap"><div class="overlay-bar" id="upload-bar"></div></div>
+  <div class="overlay-count" id="upload-count"></div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -540,7 +549,7 @@ function goToReview(){
   document.getElementById('stat-done').textContent=donePh;
   document.getElementById('stat-missing').textContent=PHOTO_ITEMS.length-donePh-na;
   document.getElementById('stat-na').textContent=na;
-  document.getElementById('upload-progress').style.display='none';
+  document.getElementById('upload-overlay').classList.remove('show');
   document.getElementById('post-submit').style.display='none';
   document.getElementById('review-actions-main').style.display='flex';
   document.getElementById('review-list').innerHTML=PHOTO_ITEMS.map(item=>{
@@ -568,23 +577,24 @@ async function submitToGoogleDrive(){
   const s=sessions[currentSession]; const naFlags=s.naFlags||{};
   const uploadBtn=document.getElementById('btn-upload');
   uploadBtn.disabled=true;
-  document.getElementById('upload-progress').style.display='block';
+  document.getElementById('upload-overlay').classList.add('show');
   document.getElementById('upload-title').textContent='Sending photos by email…';
-  document.getElementById('upload-spinner').style.display='block';
+  
   document.getElementById('review-actions-main').style.display='none';
 
   const date=new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
 
-  function setStatus(text,pct){
+  function setStatus(text,pct,count){
     document.getElementById('upload-status').textContent=text;
     document.getElementById('upload-bar').style.width=pct+'%';
+    if(count) document.getElementById('upload-count').textContent=count;
   }
 
   try{
     emailjs.init({ publicKey: EMAILJS_KEY });
 
     // Collect and compress all photos small enough for email
-    setStatus('Compressing photos…', 5);
+    setStatus('Compressing photos…', 5, 'Please keep this screen open');
     const allPhotos=[];
     for(const item of PHOTO_ITEMS){
       const photos = sessionPhotos[item.id]||[];
@@ -610,7 +620,7 @@ async function submitToGoogleDrive(){
       const firstNum = b*BATCH+1;
       const lastNum  = Math.min(firstNum+batch.length-1, allPhotos.length);
       const pct = 10 + Math.round((b/batches.length)*75);
-      setStatus('Sending email '+(b+1)+' of '+(batches.length+1)+' (photos '+firstNum+'-'+lastNum+')…', pct);
+      setStatus('Sending email '+(b+1)+' of '+(batches.length+1)+'…', pct, 'Photos '+firstNum+' to '+lastNum+' of '+allPhotos.length);
 
       let photoHtml = '';
       batch.forEach((ph,i)=>{
@@ -641,7 +651,7 @@ async function submitToGoogleDrive(){
     }
 
     // Final summary email
-    setStatus('Sending summary email…', 90);
+    setStatus('Sending summary email…', 90, 'Almost done…');
     const complete = PHOTO_ITEMS.filter(i=>(sessionPhotos[i.id]||[]).length>0);
     const missing  = PHOTO_ITEMS.filter(i=>!(sessionPhotos[i.id]||[]).length&&!naFlags[i.id]);
     const na       = PHOTO_ITEMS.filter(i=>naFlags[i.id]);
@@ -668,13 +678,13 @@ async function submitToGoogleDrive(){
       email:'hydrogenecopro@gmail.com'
     });
 
-    setStatus('✅ All done! '+allPhotos.length+' photos sent in '+(batches.length+1)+' emails.', 100);
+    setStatus('✅ All done!', 100, allPhotos.length+' photos sent in '+(batches.length+1)+' emails');
     sessions[currentSession].submitted=true;
     saveMeta();
 
-    document.getElementById('upload-spinner').style.display='none';
+    
     setTimeout(()=>{
-      document.getElementById('upload-progress').style.display='none';
+      document.getElementById('upload-overlay').classList.remove('show');
       document.getElementById('post-submit').style.display='block';
       const detail=document.getElementById('success-detail');
       if(detail) detail.textContent=allPhotos.length+' photos emailed to info@ecomotus.com in '+(batches.length+1)+' emails.';
@@ -686,7 +696,7 @@ async function submitToGoogleDrive(){
     const errMsg = err.text||err.message||(typeof err==='object'?JSON.stringify(err):String(err));
     setStatus('⚠️ '+errMsg, 0);
     document.getElementById('upload-title').textContent='Send failed — please try again';
-    document.getElementById('upload-spinner').style.display='none';
+    
     uploadBtn.disabled=false;
     document.getElementById('review-actions-main').style.display='flex';
     showToast('Failed: '+errMsg.substring(0,50));
