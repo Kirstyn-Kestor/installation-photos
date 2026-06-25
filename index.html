@@ -126,6 +126,11 @@ header{background:var(--navy);padding:16px 20px 14px;position:sticky;top:0;z-ind
 .overlay-bar-wrap{width:100%;max-width:300px;background:rgba(255,255,255,0.2);border-radius:6px;height:10px;overflow:hidden;margin-bottom:8px}
 .overlay-bar{height:100%;background:linear-gradient(90deg,#5a8fc0,#7ec8f0);border-radius:6px;transition:width 0.5s ease;width:0%}
 .overlay-count{color:rgba(255,255,255,0.55);font-size:13px;margin-top:8px}
+.screenshot-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:#1a2e4a;z-index:99999;display:none;flex-direction:column;align-items:center;justify-content:center;padding:30px;text-align:center}
+.screenshot-overlay.show{display:flex}
+.screenshot-overlay h3{color:white;font-size:18px;font-weight:700;margin-bottom:8px}
+.screenshot-overlay p{color:rgba(255,255,255,0.8);font-size:14px;margin-bottom:20px}
+.screenshot-spinner{width:50px;height:50px;border:5px solid rgba(255,255,255,0.2);border-top-color:#7ec8f0;border-radius:50%;animation:spin 0.7s linear infinite;margin:0 auto 20px}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--navy);color:var(--white);padding:12px 22px;border-radius:24px;font-size:14px;font-weight:600;z-index:99998;transition:transform 0.3s ease;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,0.25)}
 .toast.show{transform:translateX(-50%) translateY(0)}
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;display:none;align-items:center;justify-content:center;padding:20px}
@@ -138,6 +143,8 @@ header{background:var(--navy);padding:16px 20px 14px;position:sticky;top:0;z-ind
 .btn-modal-cancel{background:var(--grey-light);color:var(--text-soft)}
 .btn-modal-confirm{background:var(--red);color:var(--white)}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 </head>
 <body>
 
@@ -214,6 +221,7 @@ header{background:var(--navy);padding:16px 20px 14px;position:sticky;top:0;z-ind
   </div>
 
   <div class="review-actions">
+    <button class="btn-action" id="email-btn" style="background:var(--blue);color:white">📧 Email screenshot</button>
     <button class="btn-action btn-go-back" id="fill-gaps-btn">← Fill gaps</button>
     <button class="btn-action btn-whatsapp" id="whatsapp-btn">📲 Share on WhatsApp</button>
   </div>
@@ -241,9 +249,19 @@ header{background:var(--navy);padding:16px 20px 14px;position:sticky;top:0;z-ind
   </div>
 </div>
 
+<div class="screenshot-overlay" id="screenshot-overlay">
+  <div class="screenshot-spinner"></div>
+  <h3 id="screenshot-title">Capturing screenshot…</h3>
+  <p id="screenshot-status">Please wait</p>
+</div>
 <div class="toast" id="toast"></div>
 
 <script>
+var EMAILJS_SERVICE  = 'service_xuaj2ik';
+var EMAILJS_TEMPLATE = 'template_hv1cr7h';
+var EMAILJS_KEY      = '2_uY_bTfLmNNdRRXM';
+var NOTIFY_EMAIL     = 'info@ecomotus.com';
+
 var PHOTO_ITEMS = [
   {id:1,  label:'Engine location in Engine Room', note:'May require multiple photos'},
   {id:2,  label:'Engine', note:null},
@@ -637,6 +655,85 @@ function showToast(msg) {
   toastTimer = setTimeout(function(){t.classList.remove('show');}, 2500);
 }
 
+async function sendScreenshot() {
+  var s = sessions[currentSession];
+  var date = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+  var ov = document.getElementById('screenshot-overlay');
+  var title = document.getElementById('screenshot-title');
+  var status = document.getElementById('screenshot-status');
+
+  ov.classList.add('show');
+  title.textContent = 'Capturing screenshot…';
+  status.textContent = 'Please wait';
+
+  try {
+    emailjs.init({publicKey: EMAILJS_KEY});
+
+    // Capture the review list as a screenshot
+    title.textContent = 'Capturing review page…';
+    var reviewEl = document.getElementById('review-screen');
+    var canvas = await html2canvas(reviewEl, {
+      scale: 1.5,
+      useCORS: true,
+      backgroundColor: '#f4f6f9',
+      logging: false,
+      windowWidth: 390,
+      scrollY: -window.scrollY
+    });
+
+    title.textContent = 'Compressing…';
+    // Compress to reasonable size
+    var imgData = canvas.toDataURL('image/jpeg', 0.7);
+    var sizeKB = Math.round(imgData.length / 1024);
+    status.textContent = 'Screenshot: ' + sizeKB + 'KB';
+
+    // If too large, compress more
+    if (sizeKB > 150) {
+      imgData = canvas.toDataURL('image/jpeg', 0.4);
+      sizeKB = Math.round(imgData.length / 1024);
+      status.textContent = 'Compressed to: ' + sizeKB + 'KB';
+    }
+
+    title.textContent = 'Sending email…';
+    status.textContent = 'Sending to ' + NOTIFY_EMAIL;
+
+    var naFlags = s.naFlags || {};
+    var complete = PHOTO_ITEMS.filter(function(i){return (sessionPhotos[i.id]||[]).length>0;});
+    var missing  = PHOTO_ITEMS.filter(function(i){return !(sessionPhotos[i.id]||[]).length&&!naFlags[i.id];});
+
+    var subject = 'EcoPro Installation — ' + s.vessel + ' — ' + s.installer + ' — ' + date;
+    var message = 'EcoPro Installation Photo Review\n\n' +
+      'Vessel: ' + s.vessel + '\n' +
+      'Installer: ' + s.installer + '\n' +
+      'Date: ' + date + '\n\n' +
+      '✅ Complete: ' + complete.length + '/' + PHOTO_ITEMS.length + '\n' +
+      (missing.length > 0 ? '⚠️ Missing: ' + missing.map(function(i){return i.label;}).join(', ') : '🎉 All items photographed!') + '\n\n' +
+      'Screenshot of review page attached as photo below.';
+
+    await emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, {
+      subject: subject,
+      message: message,
+      name: 'EcoPro Installer App',
+      email: 'hydrogenecopro@gmail.com',
+      photo: imgData
+    });
+
+    title.textContent = '✅ Email sent!';
+    status.textContent = 'Screenshot sent to ' + NOTIFY_EMAIL;
+    setTimeout(function() {
+      ov.classList.remove('show');
+      showToast('✅ Screenshot emailed to ' + NOTIFY_EMAIL);
+    }, 2000);
+
+  } catch(err) {
+    console.error(err);
+    title.textContent = '⚠️ Failed';
+    status.textContent = err.text || err.message || 'Unknown error';
+    setTimeout(function() { ov.classList.remove('show'); }, 3000);
+    showToast('Failed: ' + (err.text || err.message || 'try again'));
+  }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('start-btn').addEventListener('click', function() {
     var vessel = document.getElementById('vessel-input').value.trim();
@@ -655,6 +752,7 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('whatsapp-btn').addEventListener('click', shareWhatsApp);
   document.getElementById('clear-btn').addEventListener('click', confirmClear);
   document.getElementById('modal-cancel').addEventListener('click', closeModal);
+  document.getElementById('email-btn').addEventListener('click', sendScreenshot);
   document.getElementById('tab-all').addEventListener('click', function(){setFilter('all');});
   document.getElementById('tab-outstanding').addEventListener('click', function(){setFilter('outstanding');});
   document.getElementById('tab-done').addEventListener('click', function(){setFilter('done');});
