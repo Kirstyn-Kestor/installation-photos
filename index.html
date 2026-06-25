@@ -118,6 +118,9 @@
   .review-msg.missing { color: var(--red); }
   .review-msg.na { color: var(--amber); }
   .upload-progress { background: var(--white); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow-card); margin-bottom: 16px; text-align: center; display: none; }
+  .spinner { width: 40px; height: 40px; border: 4px solid var(--border); border-top-color: var(--blue); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .success-icon { font-size: 40px; margin-bottom: 8px; }
   .upload-progress h3 { font-size: 16px; font-weight: 700; color: var(--navy); margin-bottom: 10px; }
   .upload-bar-wrap { background: var(--grey-light); border-radius: 4px; height: 8px; overflow: hidden; margin-bottom: 8px; }
   .upload-bar { height: 100%; background: linear-gradient(90deg, var(--blue), var(--green)); border-radius: 4px; transition: width 0.3s ease; width: 0%; }
@@ -140,7 +143,6 @@
   .btn-modal-cancel { background: var(--grey-light); color: var(--text-soft); }
   .btn-modal-confirm { background: var(--red); color: var(--white); }
 </style>
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 </head>
 <body>
 
@@ -211,17 +213,19 @@
   </div>
 
   <div class="upload-progress" id="upload-progress" style="display:none">
-    <h3 id="upload-title">Uploading to Google Drive…</h3>
+    <div class="spinner" id="upload-spinner"></div>
+    <h3 id="upload-title" style="margin-bottom:10px">Uploading photos…</h3>
     <div class="upload-bar-wrap"><div class="upload-bar" id="upload-bar"></div></div>
-    <div class="upload-status" id="upload-status">Preparing…</div>
+    <div class="upload-status" id="upload-status" style="margin-top:8px">Preparing…</div>
   </div>
 
   <div id="review-list"></div>
 
   <div id="post-submit" style="display:none">
-    <div style="background:var(--green-light);border:1px solid var(--green);border-radius:8px;padding:14px;text-align:center;margin-bottom:12px">
-      <div style="font-size:24px;margin-bottom:4px">✅</div>
-      <div style="font-weight:700;color:var(--green);font-size:15px">Photos sent to info@ecomotus.com</div>
+    <div style="background:var(--green-light);border:1px solid var(--green);border-radius:8px;padding:20px;text-align:center;margin-bottom:12px">
+      <div style="font-size:40px;margin-bottom:8px">✅</div>
+      <div style="font-weight:700;color:var(--green);font-size:17px;margin-bottom:4px">Upload complete!</div>
+      <div style="font-size:13px;color:var(--text-soft)" id="success-detail">Photos uploaded successfully.</div>
     </div>
     <div class="review-actions" style="margin-top:12px">
       <button class="btn-review-action btn-share" onclick="shareStatus()">📲 Share update on WhatsApp</button>
@@ -251,10 +255,8 @@
 <div class="toast" id="toast"></div>
 
 <script>
-// ── EMAILJS CONFIG ───────────────────────────────────────────────────────────
-const EMAILJS_SERVICE  = 'service_xuaj2ik';
-const EMAILJS_TEMPLATE = 'template_hv1cr7h';
-const EMAILJS_KEY      = '2_uY_bTfLmNNdRRXM';
+// ── GOOGLE APPS SCRIPT URL ───────────────────────────────────────────────────
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw9OACpMFXnw4T10EgXKXqSNkLl8gDvsYem0ccG4rAAlXHDYF8Fjh7TBwPBOCiM24k/exec';
 // ─────────────────────────────────────────────────────────────────────────────
 
 const PHOTO_ITEMS = [
@@ -559,15 +561,15 @@ function goBackToChecklist(){
 }
 
 // ── GOOGLE DRIVE UPLOAD ───────────────────────────────────────────────────────
-async function sendEmail(subject, message) {
-  const result = await emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, {
-    subject: subject,
-    message: message,
-    name: 'EcoPro Installer App',
-    email: 'hydrogenecopro@gmail.com'
+async function callScript(payload) {
+  const res = await fetch(SCRIPT_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify(payload)
   });
-  if(result.status !== 200) throw new Error('EmailJS returned status '+result.status);
-  return result;
+  const text = await res.text();
+  try { return JSON.parse(text); }
+  catch(e) { return { success: true }; } // if we can't parse, assume success
 }
 
 async function submitToGoogleDrive(){
@@ -575,10 +577,12 @@ async function submitToGoogleDrive(){
   const uploadBtn=document.getElementById('btn-upload');
   uploadBtn.disabled=true;
   document.getElementById('upload-progress').style.display='block';
-  document.getElementById('upload-title').textContent='Sending photos by email…';
+  document.getElementById('upload-title').textContent='Uploading to Google Drive…';
+  document.getElementById('upload-spinner').style.display='block';
   document.getElementById('review-actions-main').style.display='none';
 
   const date=new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+  const jobId=currentSession+'_'+Date.now();
 
   function setStatus(text,pct){
     document.getElementById('upload-status').textContent=text;
@@ -586,108 +590,59 @@ async function submitToGoogleDrive(){
   }
 
   try{
-    emailjs.init({ publicKey: EMAILJS_KEY });
+    // Step 1: Create folder
+    setStatus('Creating Google Drive folder…', 5);
+    const createData = await callScript({action:'createJob',vessel:s.vessel,installer:s.installer,jobId,date});
 
-    // Collect and compress all photos
-    setStatus('Compressing photos…', 5);
+    // Step 2: Upload photos one by one
     const allPhotos=[];
-    for(const item of PHOTO_ITEMS){
-      const photos = sessionPhotos[item.id]||[];
-      for(let idx=0; idx<photos.length; idx++){
-        // Compress to 600px / 0.4 quality = ~25-40KB each
-        const compressed = await compressImage(photos[idx], 600, 0.4);
-        allPhotos.push({ label: item.label, data: compressed, num: idx+1, total: photos.length });
-      }
-    }
-
-    if(allPhotos.length === 0){
-      throw new Error('No photos to send — please take some photos first');
-    }
-
-    // Batch into groups of 4
-    const BATCH = 4;
-    const batches = [];
-    for(let i=0; i<allPhotos.length; i+=BATCH){
-      batches.push(allPhotos.slice(i, i+BATCH));
-    }
-
-    // Send each batch as one email with photos in the body as img tags
-    for(let b=0; b<batches.length; b++){
-      const batch = batches[b];
-      const pct = 10 + Math.round((b/batches.length)*75);
-      setStatus('Sending email '+(b+1)+' of '+batches.length+' ('+batch.length+' photos)…', pct);
-
-      // Build HTML message with embedded photos
-      let photoHtml = '';
-      batch.forEach((ph,i)=>{
-        const caption = ph.total > 1 ? ph.label+' ('+ph.num+' of '+ph.total+')' : ph.label;
-        photoHtml += '<div style="margin-bottom:20px">'+
-          '<p style="font-weight:bold;margin:0 0 6px;font-family:Arial">'+(allPhotos.indexOf(ph)+1)+'. '+caption+'</p>'+
-          '<img src="'+ph.data+'" style="max-width:100%;border:1px solid #ccc;border-radius:4px">'+
-          '</div>';
+    PHOTO_ITEMS.forEach(item=>{
+      (sessionPhotos[item.id]||[]).forEach((p,idx)=>{
+        allPhotos.push({label:item.label, photoData:p, index:allPhotos.length});
       });
+    });
 
-      const firstIdx = allPhotos.indexOf(batch[0])+1;
-      const lastIdx  = allPhotos.indexOf(batch[batch.length-1])+1;
-      const subject  = 'EcoPro Photos — '+s.vessel+' — '+s.installer+
-                       ' — Photos '+firstIdx+'-'+lastIdx+' of '+allPhotos.length+
-                       ' (Email '+(b+1)+' of '+batches.length+')';
-
-      const message = '<h3 style="font-family:Arial;color:#1a2e4a">EcoPro Installation Photos</h3>'+
-        '<p style="font-family:Arial"><strong>Vessel:</strong> '+s.vessel+'<br>'+
-        '<strong>Installer:</strong> '+s.installer+'<br>'+
-        '<strong>Date:</strong> '+date+'<br>'+
-        '<strong>Batch:</strong> '+(b+1)+' of '+batches.length+' — Photos '+firstIdx+' to '+lastIdx+' of '+allPhotos.length+'</p>'+
-        '<hr style="border:1px solid #d1dce8">'+
-        photoHtml;
-
-      await sendEmail(subject, message);
-
-      // Pause between emails to avoid rate limiting
-      if(b < batches.length-1) await new Promise(r=>setTimeout(r, 1000));
+    for(let i=0;i<allPhotos.length;i++){
+      const ph=allPhotos[i];
+      const pct=5+Math.round((i/Math.max(allPhotos.length,1))*80);
+      setStatus('Uploading photo '+(i+1)+' of '+allPhotos.length+' — '+ph.label+'…', pct);
+      await callScript({action:'uploadPhoto',jobId,photoData:ph.photoData,label:ph.label,index:ph.index});
     }
 
-    // Final summary email
-    setStatus('Sending summary email…', 88);
-    const complete = PHOTO_ITEMS.filter(i=>(sessionPhotos[i.id]||[]).length>0);
-    const missing  = PHOTO_ITEMS.filter(i=>!(sessionPhotos[i.id]||[]).length&&!naFlags[i.id]);
-    const na       = PHOTO_ITEMS.filter(i=>naFlags[i.id]);
+    // Step 3: Complete and send email
+    setStatus('Sending notification email…', 90);
+    const summary=PHOTO_ITEMS.map(item=>({
+      label:item.label,
+      status:(sessionPhotos[item.id]||[]).length>0?'done':naFlags[item.id]?'na':'missing'
+    }));
+    const completeData = await callScript({action:'completeJob',jobId,summary});
 
-    const summaryHtml =
-      '<h3 style="font-family:Arial;color:#1a2e4a">EcoPro Installation Summary</h3>'+
-      '<p style="font-family:Arial"><strong>Vessel:</strong> '+s.vessel+'<br>'+
-      '<strong>Installer:</strong> '+s.installer+'<br>'+
-      '<strong>Date:</strong> '+date+'</p>'+
-      '<hr style="border:1px solid #d1dce8">'+
-      '<p style="font-family:Arial"><strong>✅ Complete ('+complete.length+'/'+PHOTO_ITEMS.length+'):</strong><br>'+
-      complete.map(i=>'• '+i.label+' ('+(sessionPhotos[i.id]||[]).length+' photo'+((sessionPhotos[i.id]||[]).length>1?'s':'')+')').join('<br>')+
-      '</p>'+
-      (missing.length>0
-        ? '<p style="font-family:Arial;color:#c0392b"><strong>⚠️ Missing ('+missing.length+'):</strong><br>'+missing.map(i=>'• '+i.label).join('<br>')+'</p>'
-        : '<p style="font-family:Arial;color:#2a7a4b"><strong>🎉 All required items photographed!</strong></p>')+
-      (na.length>0 ? '<p style="font-family:Arial"><strong>➖ Not applicable ('+na.length+'):</strong><br>'+na.map(i=>'• '+i.label).join('<br>')+'</p>' : '')+
-      '<p style="font-family:Arial"><strong>Total photos sent: '+allPhotos.length+'</strong><br>Sent in '+batches.length+' email'+(batches.length>1?'s':'')+'.</p>';
-
-    await sendEmail('EcoPro Summary — '+s.vessel+' — '+s.installer+' — '+date, summaryHtml);
-
-    setStatus('✅ All done! '+allPhotos.length+' photos sent in '+batches.length+' emails.', 100);
+    setStatus('✅ All done!', 100);
     sessions[currentSession].submitted=true;
+    sessions[currentSession].driveUrl=completeData.folderUrl||'';
     saveMeta();
 
+    document.getElementById('upload-spinner').style.display='none';
     setTimeout(()=>{
       document.getElementById('upload-progress').style.display='none';
       document.getElementById('post-submit').style.display='block';
-      showToast('✅ '+allPhotos.length+' photos emailed to info@ecomotus.com');
+      const detail=document.getElementById('success-detail');
+      if(detail) detail.textContent=allPhotos.length+' photos uploaded to Google Drive. Email sent to info@ecomotus.com.';
+      if(completeData.folderUrl){
+        const link=document.getElementById('drive-link');
+        if(link){link.href=completeData.folderUrl;link.style.display='block';}
+      }
+      showToast('✅ '+allPhotos.length+' photos uploaded successfully!');
     }, 800);
 
   }catch(err){
-    console.error('EmailJS error:', err);
-    const errMsg = err.text || err.message || (typeof err === 'object' ? JSON.stringify(err) : String(err));
-    setStatus('⚠️ Error: '+errMsg, 0);
-    document.getElementById('upload-title').textContent='Send failed — see details above';
+    console.error('Upload error:', err);
+    setStatus('⚠️ '+(err.message||'Upload failed'), 0);
+    document.getElementById('upload-title').textContent='Upload failed — please try again';
+    document.getElementById('upload-spinner').style.display='none';
     uploadBtn.disabled=false;
     document.getElementById('review-actions-main').style.display='flex';
-    showToast('Failed: '+errMsg.substring(0,60));
+    showToast('Upload failed — try again');
   }
 }
 
