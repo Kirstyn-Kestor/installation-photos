@@ -682,11 +682,12 @@ async function submitToGoogleDrive(){
 
   }catch(err){
     console.error('EmailJS error:', err);
-    setStatus('⚠️ '+(err.text||err.message||'Send failed'), 0);
-    document.getElementById('upload-title').textContent='Send failed';
+    const errMsg = err.text || err.message || (typeof err === 'object' ? JSON.stringify(err) : String(err));
+    setStatus('⚠️ Error: '+errMsg, 0);
+    document.getElementById('upload-title').textContent='Send failed — see details above';
     uploadBtn.disabled=false;
     document.getElementById('review-actions-main').style.display='flex';
-    showToast('Failed — check connection and try again');
+    showToast('Failed: '+errMsg.substring(0,60));
   }
 }
 
