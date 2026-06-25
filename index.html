@@ -17,9 +17,9 @@
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; background: var(--grey-light); color: var(--text); min-height: 100vh; padding-bottom: 80px; }
   header { background: var(--navy); padding: 16px 20px 14px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
   .header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-  .logo { font-size: 17px; font-weight: 700; color: var(--white); letter-spacing: 0.3px; }
+  .logo { font-size: 17px; font-weight: 700; color: var(--white); }
   .logo span { color: var(--blue-light); }
-  .job-badge { background: var(--navy-mid); color: var(--blue-light); font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 20px; cursor: pointer; border: 1px solid var(--blue); }
+  .job-badge { background: var(--navy-mid); color: var(--blue-light); font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 20px; border: 1px solid var(--blue); }
   .progress-wrap { background: rgba(255,255,255,0.1); border-radius: 4px; height: 6px; overflow: hidden; }
   .progress-bar { height: 100%; background: linear-gradient(90deg, var(--blue-light), #7ec8f0); border-radius: 4px; transition: width 0.4s ease; }
   .progress-label { display: flex; justify-content: space-between; margin-top: 6px; font-size: 12px; color: rgba(255,255,255,0.7); }
@@ -30,14 +30,12 @@
   .setup-card p { color: var(--text-soft); font-size: 14px; margin-bottom: 20px; line-height: 1.5; }
   .field-group { margin-bottom: 16px; }
   .field-group label { display: block; font-size: 13px; font-weight: 600; color: var(--text-soft); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
-  .field-group input { width: 100%; padding: 12px 14px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 16px; color: var(--text); background: var(--grey-light); -webkit-appearance: none; transition: border-color 0.2s; }
+  .field-group input { width: 100%; padding: 12px 14px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 16px; color: var(--text); background: var(--grey-light); -webkit-appearance: none; }
   .field-group input:focus { outline: none; border-color: var(--blue); background: var(--white); }
-  .btn-primary { width: 100%; padding: 15px; background: var(--navy); color: var(--white); border: none; border-radius: var(--radius); font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 8px; letter-spacing: 0.3px; transition: background 0.2s; }
-  .btn-primary:active { background: var(--navy-mid); }
+  .btn-primary { width: 100%; padding: 15px; background: var(--navy); color: var(--white); border: none; border-radius: var(--radius); font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 8px; }
   .saved-sessions { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border); }
   .saved-sessions h3 { font-size: 13px; font-weight: 600; color: var(--text-soft); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
-  .session-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; background: var(--accent); border: 1px solid var(--blue-light); border-radius: 8px; margin-bottom: 8px; cursor: pointer; }
-  .session-item:active { opacity: 0.7; }
+  .session-item { display: flex; align-items: center; padding: 12px 14px; background: var(--accent); border: 1px solid var(--blue-light); border-radius: 8px; margin-bottom: 8px; cursor: pointer; }
   .session-info { flex: 1; }
   .session-name { font-size: 15px; font-weight: 600; color: var(--navy); }
   .session-meta { font-size: 12px; color: var(--text-soft); margin-top: 2px; }
@@ -45,16 +43,16 @@
   .session-delete { background: none; border: none; color: var(--red); font-size: 18px; padding: 4px 8px; cursor: pointer; margin-left: 4px; }
   #main-screen { display: none; }
   .screen-padding { padding: 16px 16px 0; }
-  .filter-tabs { display: flex; gap: 8px; margin-bottom: 14px; overflow-x: auto; padding-bottom: 2px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .filter-tabs { display: flex; gap: 8px; margin-bottom: 14px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
   .filter-tabs::-webkit-scrollbar { display: none; }
-  .filter-tab { flex-shrink: 0; padding: 7px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; border: 1.5px solid var(--border); background: var(--white); color: var(--text-soft); cursor: pointer; transition: all 0.15s; }
+  .filter-tab { flex-shrink: 0; padding: 7px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; border: 1.5px solid var(--border); background: var(--white); color: var(--text-soft); cursor: pointer; }
   .filter-tab.active { background: var(--navy); color: var(--white); border-color: var(--navy); }
   .checklist { padding: 0 16px; }
-  .photo-item { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 10px; overflow: hidden; border: 1.5px solid var(--border); transition: border-color 0.2s; }
+  .photo-item { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 10px; overflow: hidden; border: 1.5px solid var(--border); }
   .photo-item.done { border-color: var(--green); }
   .photo-item.na { border-color: var(--border); opacity: 0.7; }
   .item-header { display: flex; align-items: center; padding: 13px 14px; gap: 12px; cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; }
-  .item-number { width: 28px; height: 28px; border-radius: 50%; background: var(--grey-light); border: 1.5px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: var(--text-soft); flex-shrink: 0; transition: all 0.2s; }
+  .item-number { width: 28px; height: 28px; border-radius: 50%; background: var(--grey-light); border: 1.5px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: var(--text-soft); flex-shrink: 0; }
   .photo-item.done .item-number { background: var(--green); border-color: var(--green); color: var(--white); }
   .item-label { flex: 1; font-size: 15px; font-weight: 600; color: var(--text); line-height: 1.3; }
   .item-label .conditional { display: block; font-size: 11px; font-weight: 500; color: var(--amber); margin-top: 2px; font-style: italic; }
@@ -68,12 +66,13 @@
   .thumb-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 12px 0; }
   .thumb { aspect-ratio: 1; border-radius: 6px; overflow: hidden; position: relative; background: var(--grey-light); border: 1px solid var(--border); }
   .thumb img { width: 100%; height: 100%; object-fit: cover; }
-  .thumb-del { position: absolute; top: 3px; right: 3px; background: rgba(0,0,0,0.6); color: white; border: none; border-radius: 50%; width: 22px; height: 22px; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1; }
+  .thumb-del { position: absolute; top: 3px; right: 3px; background: rgba(0,0,0,0.6); color: white; border: none; border-radius: 50%; width: 22px; height: 22px; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
   .thumb-num { position: absolute; bottom: 3px; left: 4px; background: rgba(0,0,0,0.55); color: white; font-size: 10px; font-weight: 700; padding: 1px 5px; border-radius: 4px; }
+  .saving-indicator { font-size: 12px; color: var(--green); font-weight: 600; margin-top: 8px; min-height: 18px; transition: opacity 0.3s; }
   .item-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
-  .btn-photo { flex: 1; min-width: 130px; padding: 12px 10px; background: var(--navy); color: var(--white); border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: background 0.15s; -webkit-tap-highlight-color: transparent; }
+  .btn-photo { flex: 1; min-width: 130px; padding: 12px 10px; background: var(--navy); color: var(--white); border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; -webkit-tap-highlight-color: transparent; }
   .btn-photo:active { background: var(--navy-mid); }
-  .btn-na { padding: 12px 12px; background: var(--grey-light); color: var(--text-soft); border: 1.5px solid var(--border); border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all 0.15s; -webkit-tap-highlight-color: transparent; }
+  .btn-na { padding: 12px 12px; background: var(--grey-light); color: var(--text-soft); border: 1.5px solid var(--border); border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
   .btn-na.active { background: var(--amber-light); border-color: var(--amber); color: var(--amber); }
   .hidden-input { display: none; }
   .na-note { font-size: 13px; color: var(--amber); background: var(--amber-light); border-radius: 6px; padding: 8px 10px; margin-top: 10px; font-style: italic; }
@@ -81,8 +80,7 @@
   .submit-card { background: var(--white); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow-card); text-align: center; }
   .submit-card h3 { font-size: 16px; font-weight: 700; color: var(--navy); margin-bottom: 6px; }
   .submit-card p { font-size: 13px; color: var(--text-soft); margin-bottom: 14px; line-height: 1.5; }
-  .btn-submit { width: 100%; padding: 15px; background: var(--green); color: var(--white); border: none; border-radius: var(--radius); font-size: 16px; font-weight: 700; cursor: pointer; letter-spacing: 0.3px; transition: background 0.2s; }
-  .btn-submit:active { background: #1e5c38; }
+  .btn-submit { width: 100%; padding: 15px; background: var(--green); color: var(--white); border: none; border-radius: var(--radius); font-size: 16px; font-weight: 700; cursor: pointer; }
   .btn-back { width: 100%; padding: 12px; background: none; color: var(--text-soft); border: 1.5px solid var(--border); border-radius: var(--radius); font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 10px; }
   #review-screen { display: none; padding: 20px 16px; }
   .review-header { background: var(--white); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow-card); margin-bottom: 16px; }
@@ -113,8 +111,7 @@
   .review-msg.missing { color: var(--red); }
   .review-msg.na { color: var(--amber); }
   .review-actions { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
-  .btn-review-action { flex: 1; min-width: 130px; padding: 13px 10px; border-radius: var(--radius); font-size: 14px; font-weight: 700; cursor: pointer; text-align: center; border: none; transition: opacity 0.15s; }
-  .btn-review-action:active { opacity: 0.7; }
+  .btn-review-action { flex: 1; min-width: 130px; padding: 13px 10px; border-radius: var(--radius); font-size: 14px; font-weight: 700; cursor: pointer; text-align: center; border: none; }
   .btn-go-back { background: var(--navy); color: var(--white); }
   .btn-share { background: #25D366; color: var(--white); }
   .btn-clear { background: var(--red-light); color: var(--red); border: 1.5px solid var(--red) !important; }
@@ -129,6 +126,7 @@
   .modal-actions button { flex: 1; padding: 12px; border-radius: 8px; font-size: 15px; font-weight: 700; cursor: pointer; border: none; }
   .btn-modal-cancel { background: var(--grey-light); color: var(--text-soft); }
   .btn-modal-confirm { background: var(--red); color: var(--white); }
+  .storage-warning { background: var(--amber-light); border: 1px solid var(--amber); border-radius: 8px; padding: 10px 14px; font-size: 13px; color: var(--amber); font-weight: 600; margin: 0 16px 12px; display: none; }
 </style>
 </head>
 <body>
@@ -136,7 +134,7 @@
 <header>
   <div class="header-top">
     <div class="logo">Eco<span>Pro</span> Installation</div>
-    <div class="job-badge" id="job-badge" onclick="showToast('Tap Save & go back to switch jobs')" style="display:none">✏️ <span id="job-badge-text"></span></div>
+    <div class="job-badge" id="job-badge" style="display:none"><span id="job-badge-text"></span></div>
   </div>
   <div class="progress-wrap" id="progress-wrap" style="display:none">
     <div class="progress-bar" id="progress-bar" style="width:0%"></div>
@@ -151,7 +149,7 @@
   <div style="padding:24px 20px;">
     <div class="setup-card">
       <h2>New Installation</h2>
-      <p>Enter the vessel name and your name to start. Photos are saved to your phone as you go — close and return any time without losing progress.</p>
+      <p>Enter the vessel name and your name to start. <strong>Every photo is saved to your phone the moment it's taken</strong> — you can close the browser, walk away, and return any time without losing anything.</p>
       <div class="field-group">
         <label>Vessel Name</label>
         <input type="text" id="vessel-input" placeholder="e.g. MV Sea Hawk" autocomplete="off">
@@ -177,6 +175,7 @@
       <div class="filter-tab" onclick="setFilter('done',this)">Done <span id="tab-done-count"></span></div>
     </div>
   </div>
+  <div class="storage-warning" id="storage-warning">⚠️ Storage is getting full — consider completing and clearing old jobs.</div>
   <div class="checklist" id="checklist"></div>
   <div class="submit-section">
     <div class="submit-card">
@@ -223,15 +222,15 @@
 
 <script>
 const PHOTO_ITEMS = [
-  {id:1, label:"Engine location in Engine Room", note:"May require multiple photos", multi:true},
-  {id:2, label:"Engine", note:null},
-  {id:3, label:"Engine Plate", note:"If visible", conditional:true},
-  {id:4, label:"EcoPro in relation to Engine and walkways", note:null},
-  {id:5, label:"EcoPro mounting points", note:null},
-  {id:6, label:"EcoPro Power Supply", note:null},
-  {id:7, label:"Power supply cable run", note:null},
-  {id:8, label:"EcoPro Serial Number", note:null},
-  {id:9, label:"Knock Sensor", note:null},
+  {id:1,  label:"Engine location in Engine Room", note:"May require multiple photos", multi:true},
+  {id:2,  label:"Engine", note:null},
+  {id:3,  label:"Engine Plate", note:"If visible", conditional:true},
+  {id:4,  label:"EcoPro in relation to Engine and walkways", note:null},
+  {id:5,  label:"EcoPro mounting points", note:null},
+  {id:6,  label:"EcoPro Power Supply", note:null},
+  {id:7,  label:"Power supply cable run", note:null},
+  {id:8,  label:"EcoPro Serial Number", note:null},
+  {id:9,  label:"Knock Sensor", note:null},
   {id:10, label:"Knock Sensor cable run", note:null},
   {id:11, label:"Hydrogen Connection to Air Filter", note:"Two photos if a 'V' Engine", multi:true},
   {id:12, label:"Hydrogen Hose run", note:"May require multiple photos", multi:true},
@@ -243,43 +242,141 @@ const PHOTO_ITEMS = [
   {id:18, label:"External Vessel Photo", note:null}
 ];
 
-let currentSession = null;
-let sessions = {};
-let currentFilter = 'all';
+// ─── INDEXED DB STORAGE ───────────────────────────────────────────────────────
+// Each photo is stored as its own record immediately on capture.
+// Session metadata (vessel, installer, na flags) stays in localStorage (tiny).
+// This means a crash never loses a saved photo — only the in-flight one.
 
-function loadSessions() {
-  try { const r = localStorage.getItem('ecoproSessions'); if(r) sessions = JSON.parse(r); } catch(e) { sessions = {}; }
+let db;
+const DB_NAME = 'ecoproPhotos';
+const DB_VERSION = 1;
+const STORE = 'photos';
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = e => {
+      const d = e.target.result;
+      if (!d.objectStoreNames.contains(STORE)) {
+        d.createObjectStore(STORE, { keyPath: 'photoKey' });
+      }
+    };
+    req.onsuccess = e => { db = e.target.result; resolve(db); };
+    req.onerror = e => reject(e);
+  });
 }
-function saveSessions() {
-  try { localStorage.setItem('ecoproSessions', JSON.stringify(sessions)); }
-  catch(e) { showToast('⚠️ Storage nearly full — review old jobs'); }
+
+// photoKey = "sessionKey_itemId_photoIndex"
+function savePhotoDB(sessionKey, itemId, index, dataUrl) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE, 'readwrite');
+    tx.objectStore(STORE).put({ photoKey: `${sessionKey}_${itemId}_${index}`, sessionKey, itemId, index, dataUrl });
+    tx.oncomplete = resolve;
+    tx.onerror = reject;
+  });
+}
+
+function deletePhotoDB(sessionKey, itemId, index) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE, 'readwrite');
+    tx.objectStore(STORE).delete(`${sessionKey}_${itemId}_${index}`);
+    tx.oncomplete = resolve;
+    tx.onerror = reject;
+  });
+}
+
+// After deleting a photo, re-index remaining photos so keys stay consistent
+async function reindexPhotosDB(sessionKey, itemId, photos) {
+  // Delete all existing photos for this item
+  const tx = db.transaction(STORE, 'readwrite');
+  const store = tx.objectStore(STORE);
+  const allKeys = await new Promise((res, rej) => {
+    const req = store.getAllKeys();
+    req.onsuccess = () => res(req.result);
+    req.onerror = rej;
+  });
+  const itemKeys = allKeys.filter(k => k.startsWith(`${sessionKey}_${itemId}_`));
+  itemKeys.forEach(k => store.delete(k));
+  await new Promise((res, rej) => { tx.oncomplete = res; tx.onerror = rej; });
+  // Re-save with correct indices
+  for (let i = 0; i < photos.length; i++) {
+    await savePhotoDB(sessionKey, itemId, i, photos[i]);
+  }
+}
+
+function loadPhotosForSession(sessionKey) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE, 'readonly');
+    const req = tx.objectStore(STORE).getAll();
+    req.onsuccess = () => {
+      const all = req.result.filter(r => r.sessionKey === sessionKey);
+      // Group by itemId
+      const map = {};
+      all.forEach(r => {
+        if (!map[r.itemId]) map[r.itemId] = [];
+        map[r.itemId].push(r);
+      });
+      // Sort each item's photos by index
+      Object.keys(map).forEach(id => map[id].sort((a,b) => a.index - b.index));
+      resolve(map);
+    };
+    req.onerror = reject;
+  });
+}
+
+function deleteAllPhotosForSession(sessionKey) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE, 'readwrite');
+    const store = tx.objectStore(STORE);
+    const req = store.getAll();
+    req.onsuccess = () => {
+      req.result.filter(r => r.sessionKey === sessionKey).forEach(r => store.delete(r.photoKey));
+      tx.oncomplete = resolve;
+      tx.onerror = reject;
+    };
+  });
+}
+
+// ─── SESSION METADATA (small — safe in localStorage) ─────────────────────────
+let sessions = {};
+let currentSession = null;
+let currentFilter = 'all';
+// Photos loaded into memory for current session
+let sessionPhotos = {}; // { itemId: [dataUrl, ...] }
+
+function loadMeta() {
+  try { const r = localStorage.getItem('ecoproMeta'); if(r) sessions = JSON.parse(r); } catch(e) { sessions = {}; }
+}
+function saveMeta() {
+  try { localStorage.setItem('ecoproMeta', JSON.stringify(sessions)); } catch(e) {}
 }
 function getKey(v,i) { return (v+'_'+i).replace(/[^a-z0-9]/gi,'_').toLowerCase(); }
 
 function initSession(vessel, installer) {
   const key = getKey(vessel, installer);
   if (!sessions[key]) {
-    sessions[key] = { vessel, installer, created: new Date().toISOString(), updated: new Date().toISOString(), items: {} };
-    PHOTO_ITEMS.forEach(item => { sessions[key].items[item.id] = {photos:[], na:false}; });
-    saveSessions();
+    sessions[key] = { vessel, installer, created: new Date().toISOString(), updated: new Date().toISOString(), naFlags: {} };
+    saveMeta();
   }
   return key;
 }
 
+// ─── SETUP SCREEN ─────────────────────────────────────────────────────────────
 function renderSetup() {
-  loadSessions();
+  loadMeta();
   const keys = Object.keys(sessions);
   const wrap = document.getElementById('saved-sessions-wrap');
   if (keys.length === 0) { wrap.style.display='none'; return; }
   wrap.style.display = 'block';
+  // We'll show photo counts from metadata — load counts async
   document.getElementById('saved-sessions-list').innerHTML = keys.map(key => {
     const s = sessions[key];
-    const done = Object.values(s.items).filter(i => i.photos.length>0 || i.na).length;
+    const naCount = Object.keys(s.naFlags||{}).filter(k => s.naFlags[k]).length;
     const date = new Date(s.updated).toLocaleDateString('en-GB',{day:'numeric',month:'short'});
     return `<div class="session-item" onclick="resumeSession('${key}')">
       <div class="session-info">
         <div class="session-name">${s.vessel}</div>
-        <div class="session-meta">${s.installer} · ${done}/18 done · ${date}</div>
+        <div class="session-meta">${s.installer} · updated ${date}</div>
       </div>
       <div class="session-arrow">›</div>
       <button class="session-delete" onclick="event.stopPropagation();confirmDeleteSession('${key}')">✕</button>
@@ -298,6 +395,7 @@ function resumeSession(key) { loadChecklist(key); }
 
 function goToSetup() {
   currentSession = null;
+  sessionPhotos = {};
   document.getElementById('main-screen').style.display = 'none';
   document.getElementById('review-screen').style.display = 'none';
   document.getElementById('setup-screen').style.display = 'block';
@@ -309,9 +407,19 @@ function goToSetup() {
   renderSetup();
 }
 
-function loadChecklist(key) {
+// ─── CHECKLIST ────────────────────────────────────────────────────────────────
+async function loadChecklist(key) {
   currentSession = key;
   const s = sessions[key];
+  showToast('Loading saved photos…');
+
+  // Load all photos from IndexedDB into memory
+  const photoMap = await loadPhotosForSession(key);
+  sessionPhotos = {};
+  PHOTO_ITEMS.forEach(item => {
+    sessionPhotos[item.id] = photoMap[item.id] ? photoMap[item.id].map(r => r.dataUrl) : [];
+  });
+
   document.getElementById('setup-screen').style.display = 'none';
   document.getElementById('review-screen').style.display = 'none';
   document.getElementById('main-screen').style.display = 'block';
@@ -327,13 +435,15 @@ function loadChecklist(key) {
 
 function renderChecklist() {
   const s = sessions[currentSession];
+  const naFlags = s.naFlags || {};
   document.getElementById('checklist').innerHTML = PHOTO_ITEMS.map(item => {
-    const state = s.items[item.id];
-    const isDone = state.photos.length > 0;
-    const isNA = state.na;
-    const countText = isDone ? `${state.photos.length} photo${state.photos.length>1?'s':''}` : isNA ? 'N/A' : 'Needed';
-    const thumbs = state.photos.map((p,idx) =>
-      `<div class="thumb"><img src="${p}" loading="lazy"><div class="thumb-num">${idx+1}</div>
+    const photos = sessionPhotos[item.id] || [];
+    const isDone = photos.length > 0;
+    const isNA = !!naFlags[item.id];
+    const countText = isDone ? `${photos.length} photo${photos.length>1?'s':''}` : isNA ? 'N/A' : 'Needed';
+    const thumbs = photos.map((p,idx) =>
+      `<div class="thumb"><img src="${p}" loading="lazy">
+      <div class="thumb-num">${idx+1}</div>
       <button class="thumb-del" onclick="deletePhoto(${item.id},${idx},event)">✕</button></div>`
     ).join('');
     return `<div class="photo-item${isDone?' done':''}${isNA?' na':''}" id="item-${item.id}">
@@ -344,12 +454,13 @@ function renderChecklist() {
         <div class="item-chevron">›</div>
       </div>
       <div class="item-body">
-        ${state.photos.length>0?`<div class="thumb-grid">${thumbs}</div>`:''}
+        ${photos.length>0?`<div class="thumb-grid">${thumbs}</div>`:''}
         <div class="item-actions">
           <button class="btn-photo" onclick="triggerPhoto(${item.id})">📷 ${isDone?'Add another':'Take photo'}</button>
           ${item.conditional?`<button class="btn-na${isNA?' active':''}" onclick="toggleNA(${item.id})">Not applicable</button>`:''}
         </div>
-        ${isNA?'<div class="na-note" style="margin-top:10px">Marked as not applicable for this installation.</div>':''}
+        <div class="saving-indicator" id="saving-${item.id}"></div>
+        ${isNA?'<div class="na-note">Marked as not applicable for this installation.</div>':''}
         <input type="file" accept="image/*" capture="environment" class="hidden-input" id="input-${item.id}" onchange="handlePhoto(${item.id},this)">
       </div>
     </div>`;
@@ -361,32 +472,80 @@ function renderChecklist() {
 function toggleItem(id) { document.getElementById('item-'+id).classList.toggle('expanded'); }
 function triggerPhoto(id) { document.getElementById('input-'+id).click(); }
 
-function handlePhoto(id, input) {
+function compressImage(dataUrl, maxWidth, quality) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      let w = img.width, h = img.height;
+      if (w > maxWidth) { h = Math.round(h * maxWidth / w); w = maxWidth; }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.src = dataUrl;
+  });
+}
+
+async function handlePhoto(id, input) {
   if (!input.files || !input.files[0]) return;
+
+  // Show saving indicator immediately
+  const indicator = document.getElementById('saving-'+id);
+  if (indicator) { indicator.textContent = '⏳ Saving photo…'; }
+
   const reader = new FileReader();
-  reader.onload = e => {
-    const s = sessions[currentSession];
-    s.items[id].photos.push(e.target.result);
-    s.items[id].na = false;
-    s.updated = new Date().toISOString();
-    saveSessions();
-    renderChecklist();
-    setTimeout(() => {
-      const el = document.getElementById('item-'+id);
-      if(el) { el.classList.add('expanded'); el.scrollIntoView({behavior:'smooth',block:'nearest'}); }
-    }, 60);
-    showToast('✓ Photo saved');
+  reader.onload = async e => {
+    try {
+      // Compress to max 1200px wide, 0.75 quality — keeps quality good but cuts file size ~80%
+      const compressed = await compressImage(e.target.result, 1200, 0.75);
+
+      const photos = sessionPhotos[id] || [];
+      const newIndex = photos.length;
+
+      // Save to IndexedDB immediately — this is the crash-safe save
+      await savePhotoDB(currentSession, id, newIndex, compressed);
+
+      // Update in-memory state
+      photos.push(compressed);
+      sessionPhotos[id] = photos;
+
+      // Update metadata
+      const s = sessions[currentSession];
+      s.updated = new Date().toISOString();
+      saveMeta();
+
+      // Re-render just this item
+      renderChecklist();
+      setTimeout(() => {
+        const el = document.getElementById('item-'+id);
+        if(el) {
+          el.classList.add('expanded');
+          el.scrollIntoView({behavior:'smooth', block:'nearest'});
+        }
+        const ind = document.getElementById('saving-'+id);
+        if (ind) { ind.textContent = '✓ Photo saved'; setTimeout(() => { if(ind) ind.textContent=''; }, 2000); }
+      }, 60);
+
+    } catch(err) {
+      console.error('Save error:', err);
+      if (indicator) indicator.textContent = '⚠️ Save failed — try again';
+      showToast('⚠️ Could not save photo — storage may be full');
+    }
   };
   reader.readAsDataURL(input.files[0]);
   input.value = '';
 }
 
-function deletePhoto(id, idx, event) {
+async function deletePhoto(id, idx, event) {
   event.stopPropagation();
-  const s = sessions[currentSession];
-  s.items[id].photos.splice(idx,1);
-  s.updated = new Date().toISOString();
-  saveSessions();
+  const photos = sessionPhotos[id] || [];
+  photos.splice(idx, 1);
+  sessionPhotos[id] = photos;
+  // Re-index in DB
+  await reindexPhotosDB(currentSession, id, photos);
+  sessions[currentSession].updated = new Date().toISOString();
+  saveMeta();
   renderChecklist();
   setTimeout(() => { const el = document.getElementById('item-'+id); if(el) el.classList.add('expanded'); }, 60);
   showToast('Photo removed');
@@ -394,18 +553,19 @@ function deletePhoto(id, idx, event) {
 
 function toggleNA(id) {
   const s = sessions[currentSession];
-  s.items[id].na = !s.items[id].na;
-  if (s.items[id].na) s.items[id].photos = [];
+  if (!s.naFlags) s.naFlags = {};
+  s.naFlags[id] = !s.naFlags[id];
   s.updated = new Date().toISOString();
-  saveSessions();
+  saveMeta();
   renderChecklist();
   setTimeout(() => { const el = document.getElementById('item-'+id); if(el) el.classList.add('expanded'); }, 60);
 }
 
 function updateProgress() {
   const s = sessions[currentSession];
+  const naFlags = s.naFlags || {};
   const total = PHOTO_ITEMS.length;
-  const done = PHOTO_ITEMS.filter(i => s.items[i.id].photos.length>0 || s.items[i.id].na).length;
+  const done = PHOTO_ITEMS.filter(i => (sessionPhotos[i.id]||[]).length>0 || naFlags[i.id]).length;
   const outstanding = total - done;
   const pct = Math.round((done/total)*100);
   document.getElementById('progress-bar').style.width = pct+'%';
@@ -428,10 +588,11 @@ function setFilter(filter, tab) {
 
 function applyFilter(filter) {
   const s = sessions[currentSession];
+  const naFlags = s.naFlags || {};
   PHOTO_ITEMS.forEach(item => {
     const el = document.getElementById('item-'+item.id);
     if (!el) return;
-    const isDone = s.items[item.id].photos.length>0 || s.items[item.id].na;
+    const isDone = (sessionPhotos[item.id]||[]).length>0 || naFlags[item.id];
     let show = true;
     if (filter==='done') show = isDone;
     if (filter==='outstanding') show = !isDone;
@@ -440,30 +601,32 @@ function applyFilter(filter) {
   updateProgress();
 }
 
+// ─── REVIEW ───────────────────────────────────────────────────────────────────
 function goToReview() {
   const s = sessions[currentSession];
+  const naFlags = s.naFlags || {};
   document.getElementById('main-screen').style.display = 'none';
   document.getElementById('review-screen').style.display = 'block';
   document.getElementById('review-title').textContent = s.vessel;
   document.getElementById('review-subtitle').textContent = `Installer: ${s.installer} · ${new Date(s.updated).toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'})}`;
-  const donePh = PHOTO_ITEMS.filter(i => s.items[i.id].photos.length>0).length;
-  const na = PHOTO_ITEMS.filter(i => s.items[i.id].na).length;
+  const donePh = PHOTO_ITEMS.filter(i => (sessionPhotos[i.id]||[]).length>0).length;
+  const na = PHOTO_ITEMS.filter(i => naFlags[i.id]).length;
   const missing = PHOTO_ITEMS.length - donePh - na;
   document.getElementById('stat-done').textContent = donePh;
   document.getElementById('stat-missing').textContent = missing;
   document.getElementById('stat-na').textContent = na;
   document.getElementById('review-list').innerHTML = PHOTO_ITEMS.map(item => {
-    const state = s.items[item.id];
-    const hasPh = state.photos.length>0;
-    const isNA = state.na;
+    const photos = sessionPhotos[item.id] || [];
+    const hasPh = photos.length > 0;
+    const isNA = !!naFlags[item.id];
     let cls = 'review-section ' + (hasPh?'done-section':isNA?'na-section':'missing-section');
     return `<div class="${cls}">
       <div class="review-section-head">
         <div class="review-dot"></div>
         <div class="review-label">${item.label}</div>
-        <div class="review-count">${hasPh?state.photos.length+' photo'+(state.photos.length>1?'s':''):isNA?'N/A':'Missing'}</div>
+        <div class="review-count">${hasPh?photos.length+' photo'+(photos.length>1?'s':''):isNA?'N/A':'Missing'}</div>
       </div>
-      ${hasPh?`<div class="review-thumbs">${state.photos.map(p=>`<div class="review-thumb"><img src="${p}" loading="lazy"></div>`).join('')}</div>`:''}
+      ${hasPh?`<div class="review-thumbs">${photos.map(p=>`<div class="review-thumb"><img src="${p}" loading="lazy"></div>`).join('')}</div>`:''}
       ${!hasPh&&!isNA?'<div class="review-msg missing">⚠️ No photos captured for this item</div>':''}
       ${isNA?'<div class="review-msg na">Marked as not applicable</div>':''}
     </div>`;
@@ -479,9 +642,10 @@ function goBackToChecklist() {
 
 function shareStatus() {
   const s = sessions[currentSession];
-  const done = PHOTO_ITEMS.filter(i => s.items[i.id].photos.length>0).length;
-  const na = PHOTO_ITEMS.filter(i => s.items[i.id].na).length;
-  const missing = PHOTO_ITEMS.filter(i => !s.items[i.id].photos.length && !s.items[i.id].na);
+  const naFlags = s.naFlags || {};
+  const done = PHOTO_ITEMS.filter(i => (sessionPhotos[i.id]||[]).length>0).length;
+  const na = PHOTO_ITEMS.filter(i => naFlags[i.id]).length;
+  const missing = PHOTO_ITEMS.filter(i => !(sessionPhotos[i.id]||[]).length && !naFlags[i.id]);
   let msg = `📸 *EcoPro Installation Photos*\n🚢 Vessel: ${s.vessel}\n👤 Installer: ${s.installer}\n📅 ${new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}\n\n`;
   msg += `✅ Complete: ${done}/18\n`;
   if (na>0) msg += `➖ Not applicable: ${na}\n`;
@@ -490,17 +654,28 @@ function shareStatus() {
   window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
 }
 
-function confirmClear() {
+// ─── SESSION MANAGEMENT ───────────────────────────────────────────────────────
+async function confirmClear() {
   const s = sessions[currentSession];
-  showModal(`Clear "${s.vessel}"?`, 'This will permanently delete all saved photos and progress for this job.', () => {
-    delete sessions[currentSession]; saveSessions(); closeModal(); goToSetup(); showToast('Job cleared');
+  showModal(`Clear "${s.vessel}"?`, 'This will permanently delete all saved photos and progress for this job.', async () => {
+    await deleteAllPhotosForSession(currentSession);
+    delete sessions[currentSession];
+    saveMeta();
+    closeModal();
+    goToSetup();
+    showToast('Job cleared');
   });
 }
 
-function confirmDeleteSession(key) {
+async function confirmDeleteSession(key) {
   const s = sessions[key];
-  showModal(`Delete "${s.vessel}"?`, 'This will permanently delete all saved photos for this job.', () => {
-    delete sessions[key]; saveSessions(); renderSetup(); closeModal(); showToast('Job deleted');
+  showModal(`Delete "${s.vessel}"?`, 'This will permanently delete all saved photos for this job.', async () => {
+    await deleteAllPhotosForSession(key);
+    delete sessions[key];
+    saveMeta();
+    closeModal();
+    renderSetup();
+    showToast('Job deleted');
   });
 }
 
@@ -521,8 +696,16 @@ function showToast(msg) {
   toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
 }
 
-loadSessions();
-renderSetup();
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+openDB().then(() => {
+  loadMeta();
+  renderSetup();
+}).catch(err => {
+  console.error('IndexedDB failed:', err);
+  showToast('⚠️ Storage unavailable — photos may not save');
+  loadMeta();
+  renderSetup();
+});
 </script>
 </body>
 </html>
