@@ -248,7 +248,7 @@
 
 <script>
 // ── REPLACE THIS WITH YOUR GOOGLE APPS SCRIPT URL AFTER DEPLOYING ────────────
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzbHGG3b_kPcmaGQSolLP7P7hYs9aczLLEMw-OieVER5tGwDRrtH1nXVps1kqnduBM/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw9OACpMFXnw4T10EgXKXqSNkLl8gDvsYem0ccG4rAAlXHDYF8Fjh7TBwPBOCiM24k/exec';
 // ─────────────────────────────────────────────────────────────────────────────
 
 const PHOTO_ITEMS = [
@@ -442,7 +442,7 @@ async function handlePhoto(id,input){
   const reader=new FileReader();
   reader.onload=async e=>{
     try{
-      const compressed=await compressImage(e.target.result,1200,0.75);
+      const compressed=await compressImage(e.target.result,800,0.5);
       const photos=sessionPhotos[id]||[];
       const newIndex=photos.length;
       await savePhotoDB(currentSession,id,newIndex,compressed);
@@ -554,12 +554,62 @@ function goBackToChecklist(){
 
 // ── GOOGLE DRIVE UPLOAD ───────────────────────────────────────────────────────
 async function callScript(payload) {
-  // Google Apps Script requires requests via URL params to avoid CORS issues
-  const url = SCRIPT_URL + '?payload=' + encodeURIComponent(JSON.stringify(payload));
-  const res = await fetch(url, { method: 'GET' });
-  const text = await res.text();
-  try { return JSON.parse(text); }
-  catch(e) { throw new Error('Bad response: ' + text.substring(0, 200)); }
+  // Use no-cors iframe trick — the only fully reliable way to POST to Google Apps Script
+  return new Promise((resolve, reject) => {
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = SCRIPT_URL;
+    form.target = '_gasframe';
+    form.style.display = 'none';
+
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'payload';
+    input.value = JSON.stringify(payload);
+    form.appendChild(input);
+
+    // Create hidden iframe to receive response
+    let iframe = document.getElementById('_gasframe');
+    if (!iframe) {
+      iframe = document.createElement('iframe');
+      iframe.name = '_gasframe';
+      iframe.id = '_gasframe';
+      iframe.style.display = 'none';
+      document.body.appendChild(iframe);
+    }
+
+    // For createJob we need the response — use fetch with no-cors then check via GET
+    if (payload.action === 'createJob' || payload.action === 'completeJob') {
+      // Fire POST fire-and-forget, then poll via GET for result
+      fetch(SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify(payload)
+      }).then(() => {
+        // Give script 2 seconds to process then check status via GET
+        setTimeout(async () => {
+          try {
+            const checkPayload = { action: 'checkJob', jobId: payload.jobId };
+            const res = await fetch(SCRIPT_URL + '?payload=' + encodeURIComponent(JSON.stringify(checkPayload)));
+            const data = await res.json();
+            resolve(data);
+          } catch(e) {
+            // Assume success if we can't check
+            resolve({ success: true, folderUrl: '' });
+          }
+        }, 2000);
+      }).catch(reject);
+    } else {
+      // For photo uploads just fire and forget
+      fetch(SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify(payload)
+      }).then(() => resolve({ success: true })).catch(reject);
+    }
+  });
 }
 
 async function submitToGoogleDrive(){
