@@ -131,6 +131,27 @@ header{background:var(--navy);padding:16px 20px 14px;position:sticky;top:0;z-ind
 .screenshot-overlay h3{color:white;font-size:18px;font-weight:700;margin-bottom:8px}
 .screenshot-overlay p{color:rgba(255,255,255,0.8);font-size:14px;margin-bottom:20px}
 .screenshot-spinner{width:50px;height:50px;border:5px solid rgba(255,255,255,0.2);border-top-color:#7ec8f0;border-radius:50%;animation:spin 0.7s linear infinite;margin:0 auto 20px}
+.batch-screen{display:none;padding:20px 16px}
+.batch-header{background:var(--white);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow-card);margin-bottom:16px}
+.batch-header h2{font-size:18px;font-weight:700;color:var(--navy);margin-bottom:4px}
+.batch-header p{color:var(--text-soft);font-size:13px;line-height:1.5}
+.batch-progress{background:var(--grey-light);border-radius:8px;padding:12px 14px;margin-bottom:16px;display:flex;align-items:center;gap:12px}
+.batch-progress-bar-wrap{flex:1;background:var(--border);border-radius:4px;height:8px;overflow:hidden}
+.batch-progress-bar{height:100%;background:var(--green);border-radius:4px;transition:width 0.4s}
+.batch-progress-text{font-size:13px;font-weight:600;color:var(--text-soft);white-space:nowrap}
+.batch-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.batch-thumb{border-radius:8px;overflow:hidden;position:relative;border:2px solid var(--border);cursor:pointer;transition:border-color 0.15s;aspect-ratio:1;background:var(--grey-light)}
+.batch-thumb img{width:100%;height:100%;object-fit:cover}
+.batch-thumb.selected{border-color:var(--blue);box-shadow:0 0 0 2px var(--blue)}
+.batch-thumb.sent{opacity:0.4;cursor:default}
+.batch-thumb.sent::after{content:"✓ Sent";position:absolute;bottom:0;left:0;right:0;background:rgba(42,122,75,0.85);color:white;font-size:10px;font-weight:700;text-align:center;padding:3px}
+.batch-thumb.selected::before{content:"✓";position:absolute;top:4px;right:4px;background:var(--blue);color:white;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;z-index:1}
+.batch-label{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.55);color:white;font-size:9px;padding:3px 4px;line-height:1.2}
+.btn-send-batch{width:100%;padding:15px;background:var(--green);color:var(--white);border:none;border-radius:var(--radius);font-size:16px;font-weight:700;cursor:pointer;margin-bottom:8px}
+.btn-send-batch:disabled{background:var(--grey);cursor:not-allowed}
+.batch-done-box{background:var(--green-light);border:1px solid var(--green);border-radius:8px;padding:16px;text-align:center;margin-bottom:12px;display:none}
+.batch-done-box h3{font-weight:700;color:var(--green);font-size:16px;margin-bottom:4px}
+.batch-done-box p{font-size:13px;color:var(--text-soft)}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--navy);color:var(--white);padding:12px 22px;border-radius:24px;font-size:14px;font-weight:600;z-index:99998;transition:transform 0.3s ease;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,0.25)}
 .toast.show{transform:translateX(-50%) translateY(0)}
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;display:none;align-items:center;justify-content:center;padding:20px}
@@ -226,6 +247,24 @@ header{background:var(--navy);padding:16px 20px 14px;position:sticky;top:0;z-ind
   <div class="review-actions" style="margin-top:0">
     <button class="btn-action btn-clear" id="clear-btn">🗑 Clear job</button>
   </div>
+</div>
+
+<div id="batch-screen" class="batch-screen">
+  <div class="batch-header">
+    <h2>Send Photos in Batches</h2>
+    <p>Select up to 5 photos then tap <strong>Send selected</strong>. Your share sheet opens — pick Email or WhatsApp. Come back and send the next batch until all are sent.</p>
+  </div>
+  <div class="batch-progress">
+    <div class="batch-progress-bar-wrap"><div class="batch-progress-bar" id="batch-progress-bar" style="width:0%"></div></div>
+    <div class="batch-progress-text" id="batch-progress-text">0 sent</div>
+  </div>
+  <div class="batch-done-box" id="batch-done-box">
+    <h3>✅ All photos sent!</h3>
+    <p id="batch-done-detail"></p>
+  </div>
+  <div class="batch-grid" id="batch-grid"></div>
+  <button class="btn-send-batch" id="btn-send-batch" disabled>Select photos to send</button>
+  <button class="btn-back" id="batch-back-btn">← Back to review</button>
 </div>
 
 <div class="upload-overlay" id="upload-overlay" style="display:none">
@@ -638,9 +677,12 @@ async function saveContactSheet() {
   var title = document.getElementById('screenshot-title');
   var status = document.getElementById('screenshot-status');
 
+  // Force overlay visible immediately
+  ov.style.display = 'flex';
   ov.classList.add('show');
   title.textContent = 'Building contact sheet…';
   status.textContent = 'Please wait';
+  await new Promise(function(r){setTimeout(r,50);}); // let UI update before heavy work
 
   try {
     var allPhotos = [];
@@ -754,9 +796,9 @@ async function saveContactSheet() {
         (missing2.length > 0 ? '\nMissing: ' + missing2.map(function(i){return i.label;}).join(', ') : '\n✅ All items photographed!');
 
       ov.classList.remove('show');
+      ov.style.display = 'none';
 
       if (navigator.share && navigator.canShare && navigator.canShare({files:[file]})) {
-        // Native share sheet — email, WhatsApp etc
         try {
           await navigator.share({
             files: [file],
@@ -764,12 +806,15 @@ async function saveContactSheet() {
             text: shareText
           });
           showToast('✅ Contact sheet shared!');
+          // Go to batch sending screen
+          setTimeout(function() { goToBatchSend(); }, 500);
         } catch(e) {
           if (e.name !== 'AbortError') downloadFallback(canvas.toDataURL('image/jpeg', 0.85), s.vessel, date);
+          else showToast('Share cancelled');
         }
       } else {
-        // Fallback: download image + open email
         downloadFallback(canvas.toDataURL('image/jpeg', 0.85), s.vessel, date);
+        setTimeout(function() { goToBatchSend(); }, 500);
       }
     }, 'image/jpeg', 0.85);
 
@@ -792,6 +837,141 @@ function downloadFallback(imgData, vessel, date) {
 }
 
 
+// ── BATCH SEND SCREEN ────────────────────────────────────────────────────────
+var batchSentIds = {}; // tracks which photos have been sent: key = itemId_photoIdx
+
+function goToBatchSend() {
+  document.getElementById('review-screen').style.display = 'none';
+  document.getElementById('batch-screen').style.display = 'block';
+  batchSentIds = {};
+  renderBatchGrid();
+  window.scrollTo(0,0);
+}
+
+function renderBatchGrid() {
+  var s = sessions[currentSession];
+  var grid = document.getElementById('batch-grid');
+  var allPhotos = [];
+
+  PHOTO_ITEMS.forEach(function(item) {
+    var photos = sessionPhotos[item.id] || [];
+    photos.forEach(function(p, idx) {
+      allPhotos.push({
+        key: item.id + '_' + idx,
+        label: item.label,
+        src: p,
+        num: idx + 1,
+        total: photos.length
+      });
+    });
+  });
+
+  var totalSent = Object.keys(batchSentIds).filter(function(k){return batchSentIds[k];}).length;
+  var total = allPhotos.length;
+  var pct = total > 0 ? Math.round((totalSent / total) * 100) : 0;
+
+  document.getElementById('batch-progress-bar').style.width = pct + '%';
+  document.getElementById('batch-progress-text').textContent = totalSent + ' of ' + total + ' sent';
+
+  if (totalSent === total && total > 0) {
+    document.getElementById('batch-done-box').style.display = 'block';
+    document.getElementById('batch-done-detail').textContent = total + ' photos sent successfully. Remember to upload full quality photos to Cluster.';
+  }
+
+  grid.innerHTML = allPhotos.map(function(ph) {
+    var isSent = !!batchSentIds[ph.key];
+    var caption = ph.total > 1 ? ph.label + ' ' + ph.num + '/' + ph.total : ph.label;
+    var shortLabel = caption.length > 22 ? caption.substring(0,21) + '…' : caption;
+    return '<div class="batch-thumb' + (isSent ? ' sent' : '') + '" data-key="' + ph.key + '" data-src="' + ph.src + '">' +
+      '<img src="' + ph.src + '" loading="lazy">' +
+      '<div class="batch-label">' + shortLabel + '</div>' +
+    '</div>';
+  }).join('');
+
+  // Bind click events
+  grid.querySelectorAll('.batch-thumb:not(.sent)').forEach(function(el) {
+    el.addEventListener('click', function() {
+      var selected = grid.querySelectorAll('.batch-thumb.selected');
+      if (el.classList.contains('selected')) {
+        el.classList.remove('selected');
+      } else if (selected.length < 5) {
+        el.classList.add('selected');
+      } else {
+        showToast('Maximum 5 photos per batch');
+        return;
+      }
+      updateBatchButton();
+    });
+  });
+
+  updateBatchButton();
+}
+
+function updateBatchButton() {
+  var selected = document.querySelectorAll('.batch-thumb.selected');
+  var btn = document.getElementById('btn-send-batch');
+  if (selected.length === 0) {
+    btn.disabled = true;
+    btn.textContent = 'Select photos to send';
+  } else {
+    btn.disabled = false;
+    btn.textContent = 'Send ' + selected.length + ' selected photo' + (selected.length > 1 ? 's' : '') + ' →';
+  }
+}
+
+async function sendSelectedBatch() {
+  var selected = document.querySelectorAll('.batch-thumb.selected');
+  if (selected.length === 0) return;
+
+  var s = sessions[currentSession];
+  var date = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+  var keys = [];
+  var files = [];
+
+  // Convert selected photos to files
+  for (var i = 0; i < selected.length; i++) {
+    var el = selected[i];
+    var key = el.dataset.key;
+    var src = el.dataset.src;
+    keys.push(key);
+
+    // Convert base64 to blob
+    var res = await fetch(src);
+    var blob = await res.blob();
+    var parts = key.split('_');
+    var itemId = parts[0];
+    var idx = parts[1];
+    var item = PHOTO_ITEMS.find(function(it){return it.id == itemId;});
+    var label = item ? item.label.replace(/[^a-z0-9]/gi,'-') : 'photo';
+    var filename = String(i+1).padStart(2,'0') + '_' + label + '_' + (Number(idx)+1) + '.jpg';
+    files.push(new File([blob], filename, {type:'image/jpeg'}));
+  }
+
+  var sentCount = Object.keys(batchSentIds).filter(function(k){return batchSentIds[k];}).length;
+  var totalPhotos = document.querySelectorAll('.batch-thumb').length + Object.keys(batchSentIds).filter(function(k){return batchSentIds[k];}).length;
+
+  var shareText = 'EcoPro Photos — ' + s.vessel + ' — ' + s.installer + ' — ' + date +
+    '\nBatch ' + (sentCount + 1) + '-' + (sentCount + files.length) + ' of ' + (sentCount + document.querySelectorAll('.batch-thumb').length) + ' photos';
+
+  try {
+    if (navigator.share && navigator.canShare && navigator.canShare({files:files})) {
+      await navigator.share({
+        files: files,
+        title: 'EcoPro: ' + s.vessel,
+        text: shareText
+      });
+      // Mark as sent
+      keys.forEach(function(k){ batchSentIds[k] = true; });
+      renderBatchGrid();
+      showToast('✅ Batch sent!');
+    } else {
+      showToast('Sharing not supported — try a different browser');
+    }
+  } catch(e) {
+    if (e.name !== 'AbortError') showToast('Share failed — try again');
+  }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('start-btn').addEventListener('click', function() {
     var vessel = document.getElementById('vessel-input').value.trim();
@@ -809,6 +989,12 @@ document.addEventListener('DOMContentLoaded', function() {
   });
   document.getElementById('clear-btn').addEventListener('click', confirmClear);
   document.getElementById('modal-cancel').addEventListener('click', closeModal);
+  document.getElementById('batch-send-btn').addEventListener('click', goToBatchSend);
+  document.getElementById('btn-send-batch').addEventListener('click', sendSelectedBatch);
+  document.getElementById('batch-back-btn').addEventListener('click', function() {
+    document.getElementById('batch-screen').style.display='none';
+    document.getElementById('review-screen').style.display='block';
+  });
   document.getElementById('share-sheet-btn').addEventListener('click', saveContactSheet);
   document.getElementById('tab-all').addEventListener('click', function(){setFilter('all');});
   document.getElementById('tab-outstanding').addEventListener('click', function(){setFilter('outstanding');});
