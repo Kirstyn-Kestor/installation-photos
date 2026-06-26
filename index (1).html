@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>EcoPro Installation Photos</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#1a2e4a;--navy-mid:#2c4a6e;--blue:#3b6fa0;--blue-light:#5a8fc0;
+  --accent:#e8f2fb;--green:#2a7a4b;--green-light:#e6f5ee;
+  --amber:#b85c00;--amber-light:#fff4e6;--red:#c0392b;--red-light:#fdecea;
+  --grey:#6b7a8d;--grey-light:#f4f6f9;--white:#ffffff;--border:#d1dce8;
+  --text:#1a2e4a;--text-soft:#4a5a6e;--radius:10px;
+  --shadow:0 2px 8px rgba(26,46,74,0.10);--shadow-card:0 3px 14px rgba(26,46,74,0.13)
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;background:var(--grey-light);color:var(--text);min-height:100vh;padding-bottom:80px}
+header{background:var(--navy);padding:16px 20px 14px;position:sticky;top:0;z-index:100;box-shadow:0 2px 10px rgba(0,0,0,0.2)}
+.header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.logo{font-size:17px;font-weight:700;color:var(--white)}
+.logo span{color:var(--blue-light)}
+.job-badge{background:var(--navy-mid);color:var(--blue-light);font-size:12px;font-weight:600;padding:4px 10px;border-radius:20px;border:1px solid var(--blue)}
+.progress-wrap{background:rgba(255,255,255,0.1);border-radius:4px;height:6px;overflow:hidden}
+.progress-bar{height:100%;background:linear-gradient(90deg,var(--blue-light),#7ec8f0);border-radius:4px;transition:width 0.4s ease}
+.progress-label{display:flex;justify-content:space-between;margin-top:6px;font-size:12px;color:rgba(255,255,255,0.7)}
+.progress-label strong{color:var(--white)}
+#setup-screen{padding:24px 20px}
+.setup-card{background:var(--white);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow-card)}
+.setup-card h2{font-size:20px;font-weight:700;color:var(--navy);margin-bottom:6px}
+.setup-card p{color:var(--text-soft);font-size:14px;margin-bottom:20px;line-height:1.5}
+.field-group{margin-bottom:16px}
+.field-group label{display:block;font-size:13px;font-weight:600;color:var(--text-soft);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px}
+.field-group input{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:16px;color:var(--text);background:var(--grey-light);-webkit-appearance:none}
+.field-group input:focus{outline:none;border-color:var(--blue);background:var(--white)}
+.btn-primary{width:100%;padding:15px;background:var(--navy);color:var(--white);border:none;border-radius:var(--radius);font-size:16px;font-weight:700;cursor:pointer;margin-top:8px}
+.saved-sessions{margin-top:20px;padding-top:20px;border-top:1px solid var(--border)}
+.saved-sessions h3{font-size:13px;font-weight:600;color:var(--text-soft);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px}
+.session-item{display:flex;align-items:center;padding:12px 14px;background:var(--accent);border:1px solid var(--blue-light);border-radius:8px;margin-bottom:8px;cursor:pointer}
+.session-info{flex:1}
+.session-name{font-size:15px;font-weight:600;color:var(--navy)}
+.session-meta{font-size:12px;color:var(--text-soft);margin-top:2px}
+.session-arrow{font-size:18px;color:var(--blue);margin-left:10px}
+.session-delete{background:none;border:none;color:var(--red);font-size:18px;padding:4px 8px;cursor:pointer;margin-left:4px}
+#main-screen{display:none}
+.screen-padding{padding:16px 16px 0}
+.filter-tabs{display:flex;gap:8px;margin-bottom:14px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.filter-tabs::-webkit-scrollbar{display:none}
+.filter-tab{flex-shrink:0;padding:7px 14px;border-radius:20px;font-size:13px;font-weight:600;border:1.5px solid var(--border);background:var(--white);color:var(--text-soft);cursor:pointer}
+.filter-tab.active{background:var(--navy);color:var(--white);border-color:var(--navy)}
+.checklist{padding:0 16px}
+.photo-item{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:10px;overflow:hidden;border:1.5px solid var(--border)}
+.photo-item.done{border-color:var(--green)}
+.photo-item.na{border-color:var(--green)}
+.item-header{display:flex;align-items:center;padding:13px 14px;gap:12px;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent}
+.item-number{width:28px;height:28px;border-radius:50%;background:var(--grey-light);border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--text-soft);flex-shrink:0}
+.photo-item.done .item-number,.photo-item.na .item-number{background:var(--green);border-color:var(--green);color:var(--white)}
+.item-label{flex:1;font-size:15px;font-weight:600;color:var(--text);line-height:1.3}
+.item-label .note{display:block;font-size:11px;font-weight:500;color:var(--amber);margin-top:2px;font-style:italic}
+.item-count{font-size:12px;font-weight:600;color:var(--blue);background:var(--accent);padding:3px 8px;border-radius:12px;white-space:nowrap}
+.photo-item.done .item-count{color:var(--green);background:var(--green-light)}
+.photo-item.na .item-count{color:var(--green);background:var(--green-light)}
+.item-chevron{color:var(--grey);font-size:16px;transition:transform 0.2s;flex-shrink:0}
+.photo-item.expanded .item-chevron{transform:rotate(90deg)}
+.item-body{display:none;padding:0 14px 14px;border-top:1px solid var(--border)}
+.photo-item.expanded .item-body{display:block}
+.thumb-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}
+.thumb{aspect-ratio:1;border-radius:6px;overflow:hidden;position:relative;background:var(--grey-light);border:1px solid var(--border)}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.thumb-del{position:absolute;top:3px;right:3px;background:rgba(0,0,0,0.6);color:white;border:none;border-radius:50%;width:22px;height:22px;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.thumb-num{position:absolute;bottom:3px;left:4px;background:rgba(0,0,0,0.55);color:white;font-size:10px;font-weight:700;padding:1px 5px;border-radius:4px}
+.item-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+.btn-photo{flex:1;min-width:130px;padding:12px 10px;background:var(--navy);color:var(--white);border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;-webkit-tap-highlight-color:transparent}
+.btn-na{padding:12px 12px;background:var(--grey-light);color:var(--text-soft);border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
+.btn-na.active{background:var(--green-light);border-color:var(--green);color:var(--green)}
+.hidden-input{display:none}
+.na-note{font-size:13px;color:var(--green);background:var(--green-light);border-radius:6px;padding:8px 10px;margin-top:10px;font-weight:600}
+.saving-indicator{font-size:12px;font-weight:600;margin-top:8px;min-height:18px;color:var(--green)}
+.submit-section{padding:16px;margin-top:8px}
+.submit-card{background:var(--white);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow-card);text-align:center}
+.submit-card h3{font-size:16px;font-weight:700;color:var(--navy);margin-bottom:6px}
+.submit-card p{font-size:13px;color:var(--text-soft);margin-bottom:14px;line-height:1.5}
+.btn-submit{width:100%;padding:15px;background:var(--green);color:var(--white);border:none;border-radius:var(--radius);font-size:16px;font-weight:700;cursor:pointer}
+.btn-back{width:100%;padding:12px;background:none;color:var(--text-soft);border:1.5px solid var(--border);border-radius:var(--radius);font-size:14px;font-weight:600;cursor:pointer;margin-top:10px}
+#review-screen{display:none;padding:20px 16px}
+.review-header{background:var(--white);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow-card);margin-bottom:16px}
+.review-header h2{font-size:20px;font-weight:700;color:var(--navy);margin-bottom:4px}
+.review-header p{color:var(--text-soft);font-size:14px}
+.review-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+.stat-box{text-align:center;background:var(--grey-light);border-radius:8px;padding:10px 6px}
+.stat-box .num{font-size:22px;font-weight:800;color:var(--navy)}
+.stat-box.green .num{color:var(--green)}
+.stat-box.amber .num{color:var(--amber)}
+.stat-box .lbl{font-size:11px;color:var(--text-soft);font-weight:600;text-transform:uppercase;letter-spacing:0.3px}
+.review-section{background:var(--white);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);margin-bottom:10px;border:1.5px solid var(--border)}
+.review-section.done-section{border-color:var(--green)}
+.review-section.missing-section{border-color:var(--red)}
+.review-section.na-section{border-color:var(--green);opacity:0.7}
+.review-section-head{padding:12px 14px;display:flex;align-items:center;gap:10px}
+.done-section .review-section-head{background:var(--green-light);border-bottom:1px solid var(--border)}
+.missing-section .review-section-head{background:var(--red-light)}
+.review-dot{width:10px;height:10px;border-radius:50%;background:var(--grey);flex-shrink:0}
+.done-section .review-dot{background:var(--green)}
+.missing-section .review-dot{background:var(--red)}
+.review-label{flex:1;font-size:14px;font-weight:700;color:var(--text)}
+.review-count{font-size:12px;font-weight:600;color:var(--text-soft)}
+.review-thumbs{display:flex;gap:8px;padding:10px 14px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.review-thumb{flex-shrink:0;width:80px;height:80px;border-radius:6px;overflow:hidden;border:1px solid var(--border)}
+.review-thumb img{width:100%;height:100%;object-fit:cover}
+.review-msg{padding:10px 14px;font-size:13px;font-style:italic}
+.review-msg.missing{color:var(--red)}
+.review-msg.na{color:var(--green)}
+.review-actions{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+.btn-action{flex:1;min-width:130px;padding:13px 10px;border-radius:var(--radius);font-size:14px;font-weight:700;cursor:pointer;text-align:center;border:none}
+.btn-go-back{background:var(--navy);color:var(--white)}
+.btn-whatsapp{background:#25D366;color:var(--white)}
+.btn-clear{background:var(--red-light);color:var(--red);border:1.5px solid var(--red) !important}
+.cluster-reminder{background:var(--amber-light);border:1px solid var(--amber);border-radius:8px;padding:16px;margin-top:16px;text-align:center;display:none}
+.cluster-reminder h3{font-size:15px;font-weight:700;color:var(--amber);margin-bottom:6px}
+.cluster-reminder p{font-size:13px;color:var(--text-soft);line-height:1.5}
+.spinner{width:60px;height:60px;border:6px solid rgba(255,255,255,0.2);border-top-color:#7ec8f0;border-radius:50%;animation:spin 0.7s linear infinite;margin:0 auto 24px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.upload-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:#1a2e4a;z-index:99999;display:none;flex-direction:column;align-items:center;justify-content:center;padding:30px;text-align:center}
+.upload-overlay h3{color:white;font-size:20px;font-weight:700;margin-bottom:8px}
+.upload-overlay .status-text{color:rgba(255,255,255,0.85);font-size:15px;margin-bottom:24px;min-height:22px}
+.overlay-bar-wrap{width:100%;max-width:300px;background:rgba(255,255,255,0.2);border-radius:6px;height:10px;overflow:hidden;margin-bottom:8px}
+.overlay-bar{height:100%;background:linear-gradient(90deg,#5a8fc0,#7ec8f0);border-radius:6px;transition:width 0.5s ease;width:0%}
+.overlay-count{color:rgba(255,255,255,0.55);font-size:13px;margin-top:8px}
+.screenshot-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:#1a2e4a;z-index:99999;display:none;flex-direction:column;align-items:center;justify-content:center;padding:30px;text-align:center}
+.screenshot-overlay.show{display:flex}
+.screenshot-overlay h3{color:white;font-size:18px;font-weight:700;margin-bottom:8px}
+.screenshot-overlay p{color:rgba(255,255,255,0.8);font-size:14px;margin-bottom:20px}
+.screenshot-spinner{width:50px;height:50px;border:5px solid rgba(255,255,255,0.2);border-top-color:#7ec8f0;border-radius:50%;animation:spin 0.7s linear infinite;margin:0 auto 20px}
+.batch-screen{display:none;padding:20px 16px}
+.batch-header{background:var(--white);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow-card);margin-bottom:16px}
+.batch-header h2{font-size:18px;font-weight:700;color:var(--navy);margin-bottom:4px}
+.batch-header p{color:var(--text-soft);font-size:13px;line-height:1.5}
+.batch-progress{background:var(--grey-light);border-radius:8px;padding:12px 14px;margin-bottom:16px;display:flex;align-items:center;gap:12px}
+.batch-progress-bar-wrap{flex:1;background:var(--border);border-radius:4px;height:8px;overflow:hidden}
+.batch-progress-bar{height:100%;background:var(--green);border-radius:4px;transition:width 0.4s}
+.batch-progress-text{font-size:13px;font-weight:600;color:var(--text-soft);white-space:nowrap}
+.batch-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.batch-thumb{border-radius:8px;overflow:hidden;position:relative;border:2px solid var(--border);cursor:pointer;transition:border-color 0.15s;aspect-ratio:1;background:var(--grey-light)}
+.batch-thumb img{width:100%;height:100%;object-fit:cover}
+.batch-thumb.selected{border-color:var(--blue);box-shadow:0 0 0 2px var(--blue)}
+.batch-thumb.sent{opacity:0.4;cursor:default}
+.batch-thumb.sent::after{content:"✓ Sent";position:absolute;bottom:0;left:0;right:0;background:rgba(42,122,75,0.85);color:white;font-size:10px;font-weight:700;text-align:center;padding:3px}
+.batch-thumb.selected::before{content:"✓";position:absolute;top:4px;right:4px;background:var(--blue);color:white;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;z-index:1}
+.batch-label{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.55);color:white;font-size:9px;padding:3px 4px;line-height:1.2}
+.btn-send-batch{width:100%;padding:15px;background:var(--green);color:var(--white);border:none;border-radius:var(--radius);font-size:16px;font-weight:700;cursor:pointer;margin-bottom:8px}
+.btn-send-batch:disabled{background:var(--grey);cursor:not-allowed}
+.batch-done-box{background:var(--green-light);border:1px solid var(--green);border-radius:8px;padding:16px;text-align:center;margin-bottom:12px;display:none}
+.batch-done-box h3{font-weight:700;color:var(--green);font-size:16px;margin-bottom:4px}
+.batch-done-box p{font-size:13px;color:var(--text-soft)}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--navy);color:var(--white);padding:12px 22px;border-radius:24px;font-size:14px;font-weight:600;z-index:99998;transition:transform 0.3s ease;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,0.25)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.show{display:flex}
+.modal{background:var(--white);border-radius:14px;padding:24px;width:100%;max-width:360px;box-shadow:0 8px 32px rgba(0,0,0,0.2)}
+.modal h3{font-size:18px;font-weight:700;color:var(--navy);margin-bottom:8px}
+.modal p{font-size:14px;color:var(--text-soft);margin-bottom:18px;line-height:1.5}
+.modal-actions{display:flex;gap:10px}
+.modal-actions button{flex:1;padding:12px;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;border:none}
+.btn-modal-cancel{background:var(--grey-light);color:var(--text-soft)}
+.btn-modal-confirm{background:var(--red);color:var(--white)}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+</head>
+<body>
+
+<header>
+  <div class="header-top">
+    <div class="logo">Eco<span>Pro</span> Installation</div>
+    <div class="job-badge" id="job-badge" style="display:none"><span id="job-badge-text"></span></div>
+  </div>
+  <div class="progress-wrap" id="progress-wrap" style="display:none">
+    <div class="progress-bar" id="progress-bar" style="width:0%"></div>
+  </div>
+  <div class="progress-label" id="progress-label" style="display:none">
+    <span id="progress-text">0 of 18 complete</span>
+    <strong id="progress-pct">0%</strong>
+  </div>
+</header>
+
+<div id="setup-screen">
+  <div style="padding:24px 20px">
+    <div class="setup-card">
+      <h2>New Installation</h2>
+      <p>Enter the vessel name and your name. Photos save to your phone as you go — close the browser and return any time.</p>
+      <div class="field-group">
+        <label>Vessel Name</label>
+        <input type="text" id="vessel-input" placeholder="e.g. MV Sea Hawk" autocomplete="off">
+      </div>
+      <div class="field-group">
+        <label>Installer Name</label>
+        <input type="text" id="installer-input" placeholder="e.g. John Smith" autocomplete="off">
+      </div>
+      <button class="btn-primary" id="start-btn">Start Photo Checklist →</button>
+    </div>
+    <div class="saved-sessions" id="saved-sessions-wrap" style="display:none">
+      <h3>Continue a previous job</h3>
+      <div id="saved-sessions-list"></div>
+    </div>
+  </div>
+</div>
+
+<div id="main-screen">
+  <div class="screen-padding">
+    <div class="filter-tabs">
+      <div class="filter-tab active" id="tab-all">All <span id="tab-all-count"></span></div>
+      <div class="filter-tab" id="tab-outstanding">Outstanding <span id="tab-out-count"></span></div>
+      <div class="filter-tab" id="tab-done">Done <span id="tab-done-count"></span></div>
+    </div>
+  </div>
+  <div class="checklist" id="checklist"></div>
+  <div class="submit-section">
+    <div class="submit-card">
+      <h3>Ready to review?</h3>
+      <p id="submit-info">Take photos then review and submit.</p>
+      <button class="btn-submit" id="review-btn">Review &amp; Submit</button>
+      <button class="btn-back" id="back-btn">← Save &amp; go back to jobs</button>
+    </div>
+  </div>
+</div>
+
+<div id="review-screen">
+  <div class="review-header">
+    <h2 id="review-title"></h2>
+    <p id="review-subtitle"></p>
+    <div class="review-stats">
+      <div class="stat-box green"><div class="num" id="stat-done">0</div><div class="lbl">Complete</div></div>
+      <div class="stat-box amber"><div class="num" id="stat-missing">0</div><div class="lbl">Missing</div></div>
+      <div class="stat-box"><div class="num" id="stat-na">0</div><div class="lbl">N/A</div></div>
+    </div>
+  </div>
+  <div id="review-list"></div>
+
+  <div class="cluster-reminder" id="cluster-reminder">
+    <h3>📱 Upload to Cluster</h3>
+    <p>Your checklist is complete. Please now upload the full quality photos from your phone camera roll to <strong>Cluster</strong> so the office can access them.</p>
+  </div>
+
+  <div class="review-actions">
+    <button class="btn-action" id="share-sheet-btn" style="background:var(--blue);color:white">📋 Save &amp; Share contact sheet</button>
+    <button class="btn-action btn-go-back" id="fill-gaps-btn">← Fill gaps</button>
+  </div>
+  <div class="review-actions" style="margin-top:0">
+    <button class="btn-action btn-clear" id="clear-btn">🗑 Clear job</button>
+  </div>
+</div>
+
+<div id="batch-screen" class="batch-screen">
+  <div class="batch-header">
+    <h2>Send Photos in Batches</h2>
+    <p>Select up to 5 photos then tap <strong>Send selected</strong>. Your share sheet opens — pick Email or WhatsApp. Come back and send the next batch until all are sent.</p>
+  </div>
+  <div class="batch-progress">
+    <div class="batch-progress-bar-wrap"><div class="batch-progress-bar" id="batch-progress-bar" style="width:0%"></div></div>
+    <div class="batch-progress-text" id="batch-progress-text">0 sent</div>
+  </div>
+  <div class="batch-done-box" id="batch-done-box">
+    <h3>✅ All photos sent!</h3>
+    <p id="batch-done-detail"></p>
+  </div>
+  <div class="batch-grid" id="batch-grid"></div>
+  <button class="btn-send-batch" id="btn-send-batch" disabled>Select photos to send</button>
+  <button class="btn-back" id="batch-back-btn">← Back to review</button>
+</div>
+
+<div class="upload-overlay" id="upload-overlay" style="display:none">
+  <div class="spinner"></div>
+  <h3 id="upload-title">Processing…</h3>
+  <div class="status-text" id="upload-status">Please wait…</div>
+  <div class="overlay-bar-wrap"><div class="overlay-bar" id="upload-bar"></div></div>
+  <div class="overlay-count" id="upload-count"></div>
+</div>
+
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <h3 id="modal-title"></h3>
+    <p id="modal-body"></p>
+    <div class="modal-actions">
+      <button class="btn-modal-cancel" id="modal-cancel">Cancel</button>
+      <button class="btn-modal-confirm" id="modal-confirm">Delete</button>
+    </div>
+  </div>
+</div>
+
+<div class="screenshot-overlay" id="screenshot-overlay">
+  <div class="screenshot-spinner"></div>
+  <h3 id="screenshot-title">Capturing screenshot…</h3>
+  <p id="screenshot-status">Please wait</p>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+var PHOTO_ITEMS = [
+  {id:1,  label:'Engine location in Engine Room', note:'May require multiple photos'},
+  {id:2,  label:'Engine', note:null},
+  {id:3,  label:'Engine Plate', note:'If visible'},
+  {id:4,  label:'EcoPro in relation to Engine and walkways', note:null},
+  {id:5,  label:'EcoPro mounting points', note:null},
+  {id:6,  label:'EcoPro Power Supply', note:null},
+  {id:7,  label:'Power supply cable run', note:null},
+  {id:8,  label:'EcoPro Serial Number', note:null},
+  {id:9,  label:'Knock Sensor', note:null},
+  {id:10, label:'Knock Sensor cable run', note:null},
+  {id:11, label:'Hydrogen Connection to Air Filter', note:"Two photos if a 'V' Engine"},
+  {id:12, label:'Hydrogen Hose run', note:'May require multiple photos'},
+  {id:13, label:'NOx Sensor in Exhaust (close up)', note:'If fitted'},
+  {id:14, label:'NOx Sensor location in relation to exhaust and engine', note:'If fitted'},
+  {id:15, label:'CANbus connection', note:'If fitted'},
+  {id:16, label:'Fuel Flow Meter connection', note:'If fitted'},
+  {id:17, label:'Fuel Flow Meter Make and Model', note:'If fitted and visible'},
+  {id:18, label:'External Vessel Photo', note:null}
+];
+
+var db, currentSession=null, sessions={}, currentFilter='all', sessionPhotos={};
+
+function openDB() {
+  return new Promise(function(resolve, reject) {
+    var req = indexedDB.open('ecoproPhotos', 1);
+    req.onupgradeneeded = function(e) {
+      var d = e.target.result;
+      if (!d.objectStoreNames.contains('photos')) d.createObjectStore('photos', {keyPath:'photoKey'});
+    };
+    req.onsuccess = function(e) { db = e.target.result; resolve(db); };
+    req.onerror = function(e) { reject(e); };
+  });
+}
+
+function savePhotoDB(sessionKey, itemId, index, dataUrl) {
+  return new Promise(function(resolve, reject) {
+    var tx = db.transaction('photos', 'readwrite');
+    tx.objectStore('photos').put({photoKey:sessionKey+'_'+itemId+'_'+index, sessionKey:sessionKey, itemId:itemId, index:index, dataUrl:dataUrl});
+    tx.oncomplete = resolve;
+    tx.onerror = reject;
+  });
+}
+
+function loadPhotosForSession(sessionKey) {
+  return new Promise(function(resolve, reject) {
+    var tx = db.transaction('photos', 'readonly');
+    var req = tx.objectStore('photos').getAll();
+    req.onsuccess = function() {
+      var all = req.result.filter(function(r) { return r.sessionKey === sessionKey; });
+      var map = {};
+      all.forEach(function(r) {
+        if (!map[r.itemId]) map[r.itemId] = [];
+        map[r.itemId].push(r);
+      });
+      Object.keys(map).forEach(function(id) { map[id].sort(function(a,b){return a.index-b.index;}); });
+      resolve(map);
+    };
+    req.onerror = reject;
+  });
+}
+
+function deleteAllPhotosForSession(sessionKey) {
+  return new Promise(function(resolve, reject) {
+    var tx = db.transaction('photos', 'readwrite');
+    var store = tx.objectStore('photos');
+    var req = store.getAll();
+    req.onsuccess = function() {
+      req.result.filter(function(r){return r.sessionKey===sessionKey;}).forEach(function(r){store.delete(r.photoKey);});
+      tx.oncomplete = resolve;
+      tx.onerror = reject;
+    };
+  });
+}
+
+async function reindexPhotosDB(sessionKey, itemId, photos) {
+  var tx = db.transaction('photos', 'readwrite');
+  var store = tx.objectStore('photos');
+  var allKeys = await new Promise(function(res,rej){var r=store.getAllKeys();r.onsuccess=function(){res(r.result);};r.onerror=rej;});
+  allKeys.filter(function(k){return k.startsWith(sessionKey+'_'+itemId+'_');}).forEach(function(k){store.delete(k);});
+  await new Promise(function(res,rej){tx.oncomplete=res;tx.onerror=rej;});
+  for (var i=0; i<photos.length; i++) await savePhotoDB(sessionKey, itemId, i, photos[i]);
+}
+
+function loadMeta() { try { var r=localStorage.getItem('ecoproMeta'); if(r) sessions=JSON.parse(r); } catch(e) { sessions={}; } }
+function saveMeta() { try { localStorage.setItem('ecoproMeta', JSON.stringify(sessions)); } catch(e) {} }
+function getKey(v,i) { return (v+'_'+i).replace(/[^a-z0-9]/gi,'_').toLowerCase(); }
+
+function initSession(vessel, installer) {
+  var key = getKey(vessel, installer);
+  if (!sessions[key]) {
+    sessions[key] = {vessel:vessel, installer:installer, created:new Date().toISOString(), updated:new Date().toISOString(), naFlags:{}, submitted:false};
+    saveMeta();
+  }
+  return key;
+}
+
+function renderSetup() {
+  loadMeta();
+  var keys = Object.keys(sessions);
+  var wrap = document.getElementById('saved-sessions-wrap');
+  if (keys.length === 0) { wrap.style.display='none'; return; }
+  wrap.style.display = 'block';
+  document.getElementById('saved-sessions-list').innerHTML = keys.map(function(key) {
+    var s = sessions[key];
+    var date = new Date(s.updated).toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+    var badge = s.submitted ? ' <span style="color:var(--green);font-weight:700">✓ Done</span>' : '';
+    return '<div class="session-item" data-key="'+key+'">' +
+      '<div class="session-info"><div class="session-name">'+s.vessel+badge+'</div><div class="session-meta">'+s.installer+' · '+date+'</div></div>' +
+      '<div class="session-arrow">›</div>' +
+      '<button class="session-delete" data-del="'+key+'">✕</button>' +
+    '</div>';
+  }).join('');
+  document.querySelectorAll('.session-item').forEach(function(el) {
+    el.addEventListener('click', function() { loadChecklist(el.dataset.key); });
+  });
+  document.querySelectorAll('.session-delete').forEach(function(btn) {
+    btn.addEventListener('click', function(e) { e.stopPropagation(); confirmDeleteSession(btn.dataset.del); });
+  });
+}
+
+function goToSetup() {
+  document.getElementById('upload-overlay').style.display='none';
+  currentSession = null; sessionPhotos = {};
+  document.getElementById('main-screen').style.display='none';
+  document.getElementById('review-screen').style.display='none';
+  document.getElementById('setup-screen').style.display='block';
+  document.getElementById('progress-wrap').style.display='none';
+  document.getElementById('progress-label').style.display='none';
+  document.getElementById('job-badge').style.display='none';
+  document.getElementById('vessel-input').value='';
+  document.getElementById('installer-input').value='';
+  renderSetup();
+}
+
+async function loadChecklist(key) {
+  currentSession = key;
+  showToast('Loading…');
+  var photoMap = await loadPhotosForSession(key);
+  sessionPhotos = {};
+  PHOTO_ITEMS.forEach(function(item) {
+    sessionPhotos[item.id] = photoMap[item.id] ? photoMap[item.id].map(function(r){return r.dataUrl;}) : [];
+  });
+  document.getElementById('setup-screen').style.display='none';
+  document.getElementById('review-screen').style.display='none';
+  document.getElementById('main-screen').style.display='block';
+  document.getElementById('progress-wrap').style.display='block';
+  document.getElementById('progress-label').style.display='flex';
+  document.getElementById('job-badge').style.display='inline-flex';
+  document.getElementById('job-badge-text').textContent = sessions[key].vessel;
+  currentFilter = 'all';
+  document.querySelectorAll('.filter-tab').forEach(function(t,i){t.classList.toggle('active',i===0);});
+  renderChecklist();
+  window.scrollTo(0,0);
+}
+
+function renderChecklist() {
+  var s = sessions[currentSession];
+  var naFlags = s.naFlags || {};
+  document.getElementById('checklist').innerHTML = PHOTO_ITEMS.map(function(item) {
+    var photos = sessionPhotos[item.id] || [];
+    var isDone = photos.length > 0;
+    var isNA = !!naFlags[item.id];
+    var countText = isDone ? photos.length+' photo'+(photos.length>1?'s':'') : isNA ? 'N/A' : 'Needed';
+    var thumbs = photos.map(function(p,idx) {
+      return '<div class="thumb"><img src="'+p+'" loading="lazy"><div class="thumb-num">'+(idx+1)+'</div>' +
+        '<button class="thumb-del" data-id="'+item.id+'" data-idx="'+idx+'">✕</button></div>';
+    }).join('');
+    return '<div class="photo-item'+(isDone?' done':'')+(isNA?' na':'')+'" id="item-'+item.id+'">' +
+      '<div class="item-header" data-toggle="'+item.id+'">' +
+        '<div class="item-number">'+(isDone||isNA?'✓':item.id)+'</div>' +
+        '<div class="item-label">'+item.label+(item.note?'<span class="note">'+item.note+'</span>':'')+'</div>' +
+        '<div class="item-count">'+countText+'</div>' +
+        '<div class="item-chevron">›</div>' +
+      '</div>' +
+      '<div class="item-body">' +
+        (photos.length>0?'<div class="thumb-grid">'+thumbs+'</div>':'') +
+        '<div class="item-actions">' +
+          '<button class="btn-photo" data-photo="'+item.id+'">📷 '+(isDone?'Add another':'Take photo')+'</button>' +
+          '<button class="btn-na'+(isNA?' active':'')+'" data-na="'+item.id+'">'+(isNA?'✓ Marked N/A':'Mark as N/A')+'</button>' +
+        '</div>' +
+        '<div class="saving-indicator" id="saving-'+item.id+'"></div>' +
+        (isNA?'<div class="na-note">✓ Marked as not applicable — counts as complete.</div>':'') +
+        '<input type="file" accept="image/*" capture="environment" class="hidden-input" id="input-'+item.id+'">' +
+      '</div>' +
+    '</div>';
+  }).join('');
+
+  document.querySelectorAll('[data-toggle]').forEach(function(el) {
+    el.addEventListener('click', function() { document.getElementById('item-'+el.dataset.toggle).classList.toggle('expanded'); });
+  });
+  document.querySelectorAll('[data-photo]').forEach(function(btn) {
+    btn.addEventListener('click', function() { document.getElementById('input-'+btn.dataset.photo).click(); });
+  });
+  document.querySelectorAll('[data-na]').forEach(function(btn) {
+    btn.addEventListener('click', function() { toggleNA(btn.dataset.na); });
+  });
+  document.querySelectorAll('.thumb-del').forEach(function(btn) {
+    btn.addEventListener('click', function(e) { e.stopPropagation(); deletePhoto(btn.dataset.id, parseInt(btn.dataset.idx)); });
+  });
+  document.querySelectorAll('.hidden-input').forEach(function(input) {
+    input.addEventListener('change', function() { handlePhoto(input.id.replace('input-',''), input); });
+  });
+
+  updateProgress();
+  applyFilter(currentFilter);
+}
+
+function compressImage(dataUrl, maxWidth, quality) {
+  return new Promise(function(resolve) {
+    var img = new Image();
+    img.onload = function() {
+      var canvas = document.createElement('canvas');
+      var w = img.width, h = img.height;
+      if (w > maxWidth) { h = Math.round(h*maxWidth/w); w = maxWidth; }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.src = dataUrl;
+  });
+}
+
+async function handlePhoto(id, input) {
+  if (!input.files || !input.files[0]) return;
+  var ind = document.getElementById('saving-'+id);
+  if (ind) ind.textContent = '⏳ Saving…';
+  var reader = new FileReader();
+  reader.onload = async function(e) {
+    try {
+      var compressed = await compressImage(e.target.result, 1600, 0.8);
+      var photos = sessionPhotos[id] || [];
+      await savePhotoDB(currentSession, id, photos.length, compressed);
+      photos.push(compressed);
+      sessionPhotos[id] = photos;
+      sessions[currentSession].updated = new Date().toISOString();
+      saveMeta();
+      renderChecklist();
+      setTimeout(function() {
+        var el = document.getElementById('item-'+id);
+        if (el) { el.classList.add('expanded'); el.scrollIntoView({behavior:'smooth',block:'nearest'}); }
+        var i2 = document.getElementById('saving-'+id);
+        if (i2) { i2.textContent='✓ Photo saved'; setTimeout(function(){if(i2)i2.textContent='';},2000); }
+      }, 60);
+    } catch(err) {
+      if (ind) ind.textContent = '⚠️ Save failed';
+      showToast('Could not save — try again');
+    }
+  };
+  reader.readAsDataURL(input.files[0]);
+  input.value = '';
+}
+
+async function deletePhoto(id, idx) {
+  var photos = sessionPhotos[id] || [];
+  photos.splice(idx, 1);
+  sessionPhotos[id] = photos;
+  await reindexPhotosDB(currentSession, id, photos);
+  sessions[currentSession].updated = new Date().toISOString();
+  saveMeta();
+  renderChecklist();
+  setTimeout(function(){var el=document.getElementById('item-'+id);if(el)el.classList.add('expanded');},60);
+  showToast('Photo removed');
+}
+
+function toggleNA(id) {
+  var s = sessions[currentSession];
+  if (!s.naFlags) s.naFlags = {};
+  s.naFlags[id] = !s.naFlags[id];
+  s.updated = new Date().toISOString();
+  saveMeta();
+  renderChecklist();
+  setTimeout(function(){var el=document.getElementById('item-'+id);if(el)el.classList.add('expanded');},60);
+}
+
+function updateProgress() {
+  var s = sessions[currentSession];
+  var naFlags = s.naFlags || {};
+  var total = PHOTO_ITEMS.length;
+  var done = PHOTO_ITEMS.filter(function(i){return (sessionPhotos[i.id]||[]).length>0||naFlags[i.id];}).length;
+  var outstanding = total - done;
+  var pct = Math.round((done/total)*100);
+  document.getElementById('progress-bar').style.width = pct+'%';
+  document.getElementById('progress-text').textContent = done+' of '+total+' complete';
+  document.getElementById('progress-pct').textContent = pct+'%';
+  document.getElementById('tab-all-count').textContent = '('+total+')';
+  document.getElementById('tab-out-count').textContent = '('+outstanding+')';
+  document.getElementById('tab-done-count').textContent = '('+done+')';
+  document.getElementById('submit-info').textContent = done===total
+    ? 'All items complete — ready to review.'
+    : outstanding+' item'+(outstanding!==1?'s':'')+' still outstanding.';
+}
+
+function setFilter(filter) {
+  currentFilter = filter;
+  document.querySelectorAll('.filter-tab').forEach(function(t){t.classList.remove('active');});
+  document.getElementById('tab-'+(filter==='outstanding'?'outstanding':filter==='done'?'done':'all')).classList.add('active');
+  applyFilter(filter);
+}
+
+function applyFilter(filter) {
+  var s = sessions[currentSession];
+  var naFlags = s.naFlags || {};
+  PHOTO_ITEMS.forEach(function(item) {
+    var el = document.getElementById('item-'+item.id);
+    if (!el) return;
+    var isDone = (sessionPhotos[item.id]||[]).length>0||naFlags[item.id];
+    el.style.display = (filter==='done'?isDone:filter==='outstanding'?!isDone:true)?'block':'none';
+  });
+  updateProgress();
+}
+
+function goToReview() {
+  var s = sessions[currentSession];
+  var naFlags = s.naFlags || {};
+  document.getElementById('main-screen').style.display='none';
+  document.getElementById('review-screen').style.display='block';
+  document.getElementById('review-title').textContent = s.vessel;
+  document.getElementById('review-subtitle').textContent = 'Installer: '+s.installer+' · '+new Date(s.updated).toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+  var donePh = PHOTO_ITEMS.filter(function(i){return (sessionPhotos[i.id]||[]).length>0;}).length;
+  var na = PHOTO_ITEMS.filter(function(i){return naFlags[i.id];}).length;
+  document.getElementById('stat-done').textContent = donePh;
+  document.getElementById('stat-missing').textContent = PHOTO_ITEMS.length-donePh-na;
+  document.getElementById('stat-na').textContent = na;
+  document.getElementById('cluster-reminder').style.display='block';
+  document.getElementById('review-list').innerHTML = PHOTO_ITEMS.map(function(item) {
+    var photos = sessionPhotos[item.id]||[];
+    var hasPh = photos.length>0;
+    var isNA = !!naFlags[item.id];
+    var cls = 'review-section '+(hasPh?'done-section':isNA?'na-section':'missing-section');
+    return '<div class="'+cls+'">'+
+      '<div class="review-section-head"><div class="review-dot"></div><div class="review-label">'+item.label+'</div>'+
+      '<div class="review-count">'+(hasPh?photos.length+' photo'+(photos.length>1?'s':''):isNA?'N/A':'Missing')+'</div></div>'+
+      (hasPh?'<div class="review-thumbs">'+photos.map(function(p){return '<div class="review-thumb"><img src="'+p+'" loading="lazy"></div>';}).join('')+'</div>':'')+
+      (!hasPh&&!isNA?'<div class="review-msg missing">⚠️ No photos captured</div>':'')+
+      (isNA?'<div class="review-msg na">✓ Not applicable</div>':'')+
+    '</div>';
+  }).join('');
+  window.scrollTo(0,0);
+}
+
+function showModal(title, body, onConfirm) {
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-body').textContent = body;
+  document.getElementById('modal-confirm').onclick = onConfirm;
+  document.getElementById('modal-overlay').classList.add('show');
+}
+function closeModal() { document.getElementById('modal-overlay').classList.remove('show'); }
+
+async function confirmClear() {
+  var s = sessions[currentSession];
+  showModal('Clear "'+s.vessel+'"?', 'This will permanently delete all saved photos and progress.', async function() {
+    await deleteAllPhotosForSession(currentSession);
+    delete sessions[currentSession];
+    saveMeta(); closeModal(); goToSetup(); showToast('Job cleared');
+  });
+}
+
+async function confirmDeleteSession(key) {
+  var s = sessions[key];
+  showModal('Delete "'+s.vessel+'"?', 'This will permanently delete all saved photos for this job.', async function() {
+    await deleteAllPhotosForSession(key);
+    delete sessions[key];
+    saveMeta(); closeModal(); renderSetup(); showToast('Job deleted');
+  });
+}
+
+var toastTimer;
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){t.classList.remove('show');}, 2500);
+}
+
+async function saveContactSheet() {
+  var s = sessions[currentSession];
+  var naFlags = s.naFlags || {};
+  var date = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+  var ov = document.getElementById('screenshot-overlay');
+  var title = document.getElementById('screenshot-title');
+  var status = document.getElementById('screenshot-status');
+
+  ov.classList.add('show');
+  title.textContent = 'Building contact sheet…';
+  status.textContent = 'Please wait';
+
+  try {
+    var allPhotos = [];
+    PHOTO_ITEMS.forEach(function(item) {
+      var photos = sessionPhotos[item.id] || [];
+      if (photos.length > 0) allPhotos.push({label:item.label, src:photos[0]});
+      else if (naFlags[item.id]) allPhotos.push({label:item.label, src:null, na:true});
+      else allPhotos.push({label:item.label, src:null, missing:true});
+    });
+
+    var COLS = 3;
+    var THUMB = 150;
+    var LABEL_H = 28;
+    var PAD = 8;
+    var ROWS = Math.ceil(allPhotos.length / COLS);
+    var W = (THUMB + PAD) * COLS + PAD;
+    var H = 70 + (THUMB + LABEL_H + PAD) * ROWS + PAD;
+
+    var canvas = document.createElement('canvas');
+    canvas.width = W;
+    canvas.height = H;
+    var ctx = canvas.getContext('2d');
+
+    // Background
+    ctx.fillStyle = '#f4f6f9';
+    ctx.fillRect(0, 0, W, H);
+
+    // Header
+    ctx.fillStyle = '#1a2e4a';
+    ctx.fillRect(0, 0, W, 60);
+    ctx.fillStyle = 'white';
+    ctx.font = 'bold 15px Arial';
+    ctx.fillText('EcoPro: ' + s.vessel, 10, 22);
+    ctx.font = '12px Arial';
+    ctx.fillText(s.installer + ' — ' + date, 10, 42);
+
+    // Stats
+    var done = PHOTO_ITEMS.filter(function(i){return (sessionPhotos[i.id]||[]).length>0;}).length;
+    var missing = PHOTO_ITEMS.filter(function(i){return !(sessionPhotos[i.id]||[]).length&&!naFlags[i.id];}).length;
+    ctx.fillStyle = missing > 0 ? '#e8f2fb' : '#e6f5ee';
+    ctx.font = 'bold 11px Arial';
+    ctx.fillStyle = 'rgba(255,255,255,0.7)';
+    ctx.fillText(done + '/' + PHOTO_ITEMS.length + ' complete' + (missing > 0 ? ' · ' + missing + ' missing' : ' ✓'), 10, 56);
+
+    // Draw thumbnails
+    var loadPromises = allPhotos.map(function(ph, idx) {
+      return new Promise(function(resolve) {
+        var col = idx % COLS;
+        var row = Math.floor(idx / COLS);
+        var x = PAD + col * (THUMB + PAD);
+        var y = 70 + row * (THUMB + LABEL_H + PAD);
+
+        // Label bar
+        ctx.fillStyle = ph.missing ? '#fdecea' : ph.na ? '#e6f5ee' : '#e8f2fb';
+        ctx.fillRect(x, y + THUMB, THUMB, LABEL_H);
+        ctx.fillStyle = ph.missing ? '#c0392b' : ph.na ? '#2a7a4b' : '#1a2e4a';
+        ctx.font = '9px Arial';
+        var label = ph.label.length > 20 ? ph.label.substring(0, 19) + '…' : ph.label;
+        ctx.fillText(label, x + 3, y + THUMB + 11);
+        ctx.font = 'bold 9px Arial';
+        ctx.fillText(ph.missing ? '⚠ Missing' : ph.na ? '✓ N/A' : '✓', x + 3, y + THUMB + 22);
+
+        if (ph.src) {
+          var img = new Image();
+          img.onload = function() {
+            // Draw image cropped to square
+            var iw = img.width, ih = img.height;
+            var size = Math.min(iw, ih);
+            var sx = (iw - size) / 2, sy = (ih - size) / 2;
+            ctx.drawImage(img, sx, sy, size, size, x, y, THUMB, THUMB);
+            resolve();
+          };
+          img.onerror = function() {
+            ctx.fillStyle = '#d1dce8';
+            ctx.fillRect(x, y, THUMB, THUMB);
+            resolve();
+          };
+          img.src = ph.src;
+        } else {
+          ctx.fillStyle = ph.na ? '#e6f5ee' : '#fdecea';
+          ctx.fillRect(x, y, THUMB, THUMB);
+          ctx.fillStyle = ph.na ? '#2a7a4b' : '#c0392b';
+          ctx.font = 'bold 13px Arial';
+          ctx.textAlign = 'center';
+          ctx.fillText(ph.na ? 'N/A' : '⚠', x + THUMB/2, y + THUMB/2 + 5);
+          ctx.textAlign = 'left';
+          resolve();
+        }
+      });
+    });
+
+    await Promise.all(loadPromises);
+
+    title.textContent = 'Ready!';
+    status.textContent = 'Opening share options…';
+
+    var naFlags2 = s.naFlags || {};
+    var complete2 = PHOTO_ITEMS.filter(function(i){return (sessionPhotos[i.id]||[]).length>0;});
+    var missing2  = PHOTO_ITEMS.filter(function(i){return !(sessionPhotos[i.id]||[]).length&&!naFlags2[i.id];});
+    var na2       = PHOTO_ITEMS.filter(function(i){return naFlags2[i.id];});
+
+    sessions[currentSession].submitted = true;
+    saveMeta();
+
+    // Use native share — lets them pick email, WhatsApp, Messages etc
+    canvas.toBlob(async function(blob) {
+      var filename = 'EcoPro-' + s.vessel.replace(/[^a-z0-9]/gi,'-') + '-' + date.replace(/ /g,'-') + '.jpg';
+      var file = new File([blob], filename, {type:'image/jpeg'});
+      var shareText = 'EcoPro Installation: ' + s.vessel + ' — ' + s.installer + ' — ' + date +
+        '\nComplete: ' + complete2.length + '/' + PHOTO_ITEMS.length +
+        (missing2.length > 0 ? '\nMissing: ' + missing2.map(function(i){return i.label;}).join(', ') : '\n✅ All items photographed!');
+
+      ov.classList.remove('show');
+
+      if (navigator.share && navigator.canShare && navigator.canShare({files:[file]})) {
+        // Native share sheet — email, WhatsApp etc
+        try {
+          await navigator.share({
+            files: [file],
+            title: 'EcoPro: ' + s.vessel,
+            text: shareText
+          });
+          showToast('✅ Contact sheet shared!');
+        } catch(e) {
+          if (e.name !== 'AbortError') downloadFallback(canvas.toDataURL('image/jpeg', 0.85), s.vessel, date);
+        }
+      } else {
+        // Fallback: download image + open email
+        downloadFallback(canvas.toDataURL('image/jpeg', 0.85), s.vessel, date);
+      }
+    }, 'image/jpeg', 0.85);
+
+  } catch(err) {
+    console.error(err);
+    title.textContent = '⚠️ Failed';
+    status.textContent = err.message || 'Unknown error';
+    setTimeout(function() { ov.classList.remove('show'); }, 3000);
+  }
+}
+
+function downloadFallback(imgData, vessel, date) {
+  var a = document.createElement('a');
+  a.href = imgData;
+  a.download = 'EcoPro-' + vessel.replace(/[^a-z0-9]/gi,'-') + '-contactsheet.jpg';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  showToast('✅ Saved! Now attach to email or WhatsApp');
+}
+
+
+// ── BATCH SEND SCREEN ────────────────────────────────────────────────────────
+var batchSentIds = {}; // tracks which photos have been sent: key = itemId_photoIdx
+
+function goToBatchSend() {
+  document.getElementById('review-screen').style.display = 'none';
+  document.getElementById('batch-screen').style.display = 'block';
+  batchSentIds = {};
+  renderBatchGrid();
+  window.scrollTo(0,0);
+}
+
+function renderBatchGrid() {
+  var s = sessions[currentSession];
+  var grid = document.getElementById('batch-grid');
+  var allPhotos = [];
+
+  PHOTO_ITEMS.forEach(function(item) {
+    var photos = sessionPhotos[item.id] || [];
+    photos.forEach(function(p, idx) {
+      allPhotos.push({
+        key: item.id + '_' + idx,
+        label: item.label,
+        src: p,
+        num: idx + 1,
+        total: photos.length
+      });
+    });
+  });
+
+  var totalSent = Object.keys(batchSentIds).filter(function(k){return batchSentIds[k];}).length;
+  var total = allPhotos.length;
+  var pct = total > 0 ? Math.round((totalSent / total) * 100) : 0;
+
+  document.getElementById('batch-progress-bar').style.width = pct + '%';
+  document.getElementById('batch-progress-text').textContent = totalSent + ' of ' + total + ' sent';
+
+  if (totalSent === total && total > 0) {
+    document.getElementById('batch-done-box').style.display = 'block';
+    document.getElementById('batch-done-detail').textContent = total + ' photos sent successfully. Remember to upload full quality photos to Cluster.';
+  }
+
+  grid.innerHTML = allPhotos.map(function(ph) {
+    var isSent = !!batchSentIds[ph.key];
+    var caption = ph.total > 1 ? ph.label + ' ' + ph.num + '/' + ph.total : ph.label;
+    var shortLabel = caption.length > 22 ? caption.substring(0,21) + '…' : caption;
+    return '<div class="batch-thumb' + (isSent ? ' sent' : '') + '" data-key="' + ph.key + '" data-src="' + ph.src + '">' +
+      '<img src="' + ph.src + '" loading="lazy">' +
+      '<div class="batch-label">' + shortLabel + '</div>' +
+    '</div>';
+  }).join('');
+
+  // Bind click events
+  grid.querySelectorAll('.batch-thumb:not(.sent)').forEach(function(el) {
+    el.addEventListener('click', function() {
+      var selected = grid.querySelectorAll('.batch-thumb.selected');
+      if (el.classList.contains('selected')) {
+        el.classList.remove('selected');
+      } else if (selected.length < 5) {
+        el.classList.add('selected');
+      } else {
+        showToast('Maximum 5 photos per batch');
+        return;
+      }
+      updateBatchButton();
+    });
+  });
+
+  updateBatchButton();
+}
+
+function updateBatchButton() {
+  var selected = document.querySelectorAll('.batch-thumb.selected');
+  var btn = document.getElementById('btn-send-batch');
+  if (selected.length === 0) {
+    btn.disabled = true;
+    btn.textContent = 'Select photos to send';
+  } else {
+    btn.disabled = false;
+    btn.textContent = 'Send ' + selected.length + ' selected photo' + (selected.length > 1 ? 's' : '') + ' →';
+  }
+}
+
+async function sendSelectedBatch() {
+  var selected = document.querySelectorAll('.batch-thumb.selected');
+  if (selected.length === 0) return;
+
+  var s = sessions[currentSession];
+  var date = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+  var keys = [];
+  var files = [];
+
+  // Convert selected photos to files
+  for (var i = 0; i < selected.length; i++) {
+    var el = selected[i];
+    var key = el.dataset.key;
+    var src = el.dataset.src;
+    keys.push(key);
+
+    // Convert base64 to blob
+    var res = await fetch(src);
+    var blob = await res.blob();
+    var parts = key.split('_');
+    var itemId = parts[0];
+    var idx = parts[1];
+    var item = PHOTO_ITEMS.find(function(it){return it.id == itemId;});
+    var label = item ? item.label.replace(/[^a-z0-9]/gi,'-') : 'photo';
+    var filename = String(i+1).padStart(2,'0') + '_' + label + '_' + (Number(idx)+1) + '.jpg';
+    files.push(new File([blob], filename, {type:'image/jpeg'}));
+  }
+
+  var sentCount = Object.keys(batchSentIds).filter(function(k){return batchSentIds[k];}).length;
+  var totalPhotos = document.querySelectorAll('.batch-thumb').length + Object.keys(batchSentIds).filter(function(k){return batchSentIds[k];}).length;
+
+  var shareText = 'EcoPro Photos — ' + s.vessel + ' — ' + s.installer + ' — ' + date +
+    '\nBatch ' + (sentCount + 1) + '-' + (sentCount + files.length) + ' of ' + (sentCount + document.querySelectorAll('.batch-thumb').length) + ' photos';
+
+  try {
+    if (navigator.share && navigator.canShare && navigator.canShare({files:files})) {
+      await navigator.share({
+        files: files,
+        title: 'EcoPro: ' + s.vessel,
+        text: shareText
+      });
+      // Mark as sent
+      keys.forEach(function(k){ batchSentIds[k] = true; });
+      renderBatchGrid();
+      showToast('✅ Batch sent!');
+    } else {
+      showToast('Sharing not supported — try a different browser');
+    }
+  } catch(e) {
+    if (e.name !== 'AbortError') showToast('Share failed — try again');
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('start-btn').addEventListener('click', function() {
+    var vessel = document.getElementById('vessel-input').value.trim();
+    var installer = document.getElementById('installer-input').value.trim();
+    if (!vessel) { showToast('Please enter a vessel name'); return; }
+    if (!installer) { showToast('Please enter your name'); return; }
+    loadChecklist(initSession(vessel, installer));
+  });
+  document.getElementById('review-btn').addEventListener('click', goToReview);
+  document.getElementById('back-btn').addEventListener('click', goToSetup);
+  document.getElementById('fill-gaps-btn').addEventListener('click', function() {
+    document.getElementById('review-screen').style.display='none';
+    document.getElementById('main-screen').style.display='block';
+    setFilter('outstanding');
+  });
+  document.getElementById('clear-btn').addEventListener('click', confirmClear);
+  document.getElementById('modal-cancel').addEventListener('click', closeModal);
+  document.getElementById('batch-send-btn').addEventListener('click', goToBatchSend);
+  document.getElementById('btn-send-batch').addEventListener('click', sendSelectedBatch);
+  document.getElementById('batch-back-btn').addEventListener('click', function() {
+    document.getElementById('batch-screen').style.display='none';
+    document.getElementById('review-screen').style.display='block';
+  });
+  document.getElementById('share-sheet-btn').addEventListener('click', saveContactSheet);
+  document.getElementById('tab-all').addEventListener('click', function(){setFilter('all');});
+  document.getElementById('tab-outstanding').addEventListener('click', function(){setFilter('outstanding');});
+  document.getElementById('tab-done').addEventListener('click', function(){setFilter('done');});
+});
+
+openDB().then(function() { loadMeta(); renderSetup(); }).catch(function() { loadMeta(); renderSetup(); });
+</script>
+</body>
+</html>
